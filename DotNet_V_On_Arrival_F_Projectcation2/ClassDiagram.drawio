@@ -1,0 +1,176 @@
+<mxfile host="app.diagrams.net" modified="2025-11-11T00:00:00.000Z" agent="draw.io" version="24.0.0" type="device">
+  <diagram name="Class Diagram" id="class-diagram">
+    <mxGraphModel dx="1434" dy="780" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Traveler Class -->
+        <mxCell id="class1" value="Traveler" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+          <mxGeometry x="100" y="80" width="250" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="class1-attr" value="- travelerId: String&#xa;- firstName: String&#xa;- lastName: String&#xa;- email: String&#xa;- phoneNumber: String&#xa;- nationality: String&#xa;- passportNumber: String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class1">
+          <mxGeometry y="26" width="250" height="114" as="geometry"/>
+        </mxCell>
+        <mxCell id="class1-line" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class1">
+          <mxGeometry y="140" width="250" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="class1-methods" value="+ register(): boolean&#xa;+ login(): boolean&#xa;+ updateProfile(): void&#xa;+ viewApplications(): List&lt;VisaApplication&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class1">
+          <mxGeometry y="148" width="250" height="72" as="geometry"/>
+        </mxCell>
+
+        <!-- VisaApplication Class -->
+        <mxCell id="class2" value="VisaApplication" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+          <mxGeometry x="450" y="80" width="250" height="260" as="geometry"/>
+        </mxCell>
+        <mxCell id="class2-attr" value="- applicationId: String&#xa;- travelerId: String&#xa;- applicationDate: Date&#xa;- purposeOfVisit: String&#xa;- expectedArrivalDate: Date&#xa;- expectedDepartureDate: Date&#xa;- status: String&#xa;- verificationDate: Date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class2">
+          <mxGeometry y="26" width="250" height="134" as="geometry"/>
+        </mxCell>
+        <mxCell id="class2-line" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class2">
+          <mxGeometry y="160" width="250" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="class2-methods" value="+ submitApplication(): boolean&#xa;+ updateStatus(status: String): void&#xa;+ addDocument(doc: Document): void&#xa;+ getStatus(): String&#xa;+ cancelApplication(): boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class2">
+          <mxGeometry y="168" width="250" height="92" as="geometry"/>
+        </mxCell>
+
+        <!-- Document Class -->
+        <mxCell id="class3" value="Document" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+          <mxGeometry x="800" y="80" width="250" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="class3-attr" value="- documentId: String&#xa;- applicationId: String&#xa;- documentType: String&#xa;- fileName: String&#xa;- uploadDate: Date&#xa;- verificationStatus: String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class3">
+          <mxGeometry y="26" width="250" height="104" as="geometry"/>
+        </mxCell>
+        <mxCell id="class3-line" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class3">
+          <mxGeometry y="130" width="250" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="class3-methods" value="+ uploadDocument(): boolean&#xa;+ verifyDocument(): boolean&#xa;+ deleteDocument(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class3">
+          <mxGeometry y="138" width="250" height="62" as="geometry"/>
+        </mxCell>
+
+        <!-- Payment Class -->
+        <mxCell id="class4" value="Payment" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+          <mxGeometry x="450" y="420" width="250" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="class4-attr" value="- paymentId: String&#xa;- applicationId: String&#xa;- amount: double&#xa;- paymentDate: Date&#xa;- paymentMethod: String&#xa;- transactionId: String&#xa;- status: String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class4">
+          <mxGeometry y="26" width="250" height="114" as="geometry"/>
+        </mxCell>
+        <mxCell id="class4-line" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class4">
+          <mxGeometry y="140" width="250" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="class4-methods" value="+ processPayment(): boolean&#xa;+ verifyPayment(): boolean&#xa;+ refundPayment(): boolean&#xa;+ getReceipt(): String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class4">
+          <mxGeometry y="148" width="250" height="72" as="geometry"/>
+        </mxCell>
+
+        <!-- Officer Class -->
+        <mxCell id="class5" value="Officer" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+          <mxGeometry x="100" y="420" width="250" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="class5-attr" value="- officerId: String&#xa;- firstName: String&#xa;- lastName: String&#xa;- email: String&#xa;- department: String&#xa;- role: String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class5">
+          <mxGeometry y="26" width="250" height="104" as="geometry"/>
+        </mxCell>
+        <mxCell id="class5-line" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class5">
+          <mxGeometry y="130" width="250" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="class5-methods" value="+ login(): boolean&#xa;+ verifyApplication(appId: String): void&#xa;+ approveVisa(appId: String): boolean&#xa;+ rejectVisa(appId: String, reason: String): boolean&#xa;+ generateReport(): String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class5">
+          <mxGeometry y="138" width="250" height="82" as="geometry"/>
+        </mxCell>
+
+        <!-- Admin Class -->
+        <mxCell id="class6" value="Admin" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+          <mxGeometry x="800" y="420" width="250" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="class6-attr" value="- adminId: String&#xa;- firstName: String&#xa;- lastName: String&#xa;- email: String&#xa;- privileges: List&lt;String&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class6">
+          <mxGeometry y="26" width="250" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="class6-line" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class6">
+          <mxGeometry y="110" width="250" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="class6-methods" value="+ login(): boolean&#xa;+ manageUsers(): void&#xa;+ updateSystemSettings(): void&#xa;+ updateVisaRules(): void&#xa;+ generateSystemReports(): String&#xa;+ monitorSystem(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class6">
+          <mxGeometry y="118" width="250" height="102" as="geometry"/>
+        </mxCell>
+
+        <!-- Relationships -->
+        <!-- Traveler to VisaApplication (1 to many) -->
+        <mxCell id="rel1" value="" style="endArrow=open;endFill=1;endSize=12;html=1;" edge="1" parent="1" source="class1" target="class2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rel1-label1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel1">
+          <mxGeometry x="-0.8" y="-1" relative="1" as="geometry">
+            <mxPoint x="10" y="-10" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel1-label2" value="*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel1">
+          <mxGeometry x="0.8" y="-1" relative="1" as="geometry">
+            <mxPoint x="-10" y="-10" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel1-label3" value="submits" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel1">
+          <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+            <mxPoint y="-15" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- VisaApplication to Document (1 to many) -->
+        <mxCell id="rel2" value="" style="endArrow=open;endFill=1;endSize=12;html=1;" edge="1" parent="1" source="class2" target="class3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rel2-label1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel2">
+          <mxGeometry x="-0.8" y="-1" relative="1" as="geometry">
+            <mxPoint x="10" y="-10" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel2-label2" value="*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel2">
+          <mxGeometry x="0.8" y="-1" relative="1" as="geometry">
+            <mxPoint x="-10" y="-10" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel2-label3" value="contains" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel2">
+          <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+            <mxPoint y="-15" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- VisaApplication to Payment (1 to 1) -->
+        <mxCell id="rel3" value="" style="endArrow=open;endFill=1;endSize=12;html=1;" edge="1" parent="1" source="class2" target="class4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rel3-label1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel3">
+          <mxGeometry x="-0.8" y="-1" relative="1" as="geometry">
+            <mxPoint x="10" y="10" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel3-label2" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel3">
+          <mxGeometry x="0.8" y="-1" relative="1" as="geometry">
+            <mxPoint x="-10" y="-10" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel3-label3" value="requires" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel3">
+          <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+            <mxPoint x="15" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Officer to VisaApplication (many to many) -->
+        <mxCell id="rel4" value="" style="endArrow=open;endFill=1;endSize=12;html=1;" edge="1" parent="1" source="class5" target="class2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rel4-label1" value="*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel4">
+          <mxGeometry x="-0.8" y="-1" relative="1" as="geometry">
+            <mxPoint x="10" y="10" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel4-label2" value="*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel4">
+          <mxGeometry x="0.8" y="-1" relative="1" as="geometry">
+            <mxPoint x="-10" y="-10" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel4-label3" value="verifies" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel4">
+          <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+            <mxPoint x="-15" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

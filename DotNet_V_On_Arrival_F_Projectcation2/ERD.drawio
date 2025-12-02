@@ -1,0 +1,159 @@
+<mxfile host="app.diagrams.net" modified="2025-11-11T00:00:00.000Z" agent="draw.io" version="24.0.0" type="device">
+  <diagram name="ERD" id="erd-diagram">
+    <mxGraphModel dx="1434" dy="780" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Traveler Entity -->
+        <mxCell id="entity1" value="Traveler" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="100" y="100" width="220" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity1-attr" value="PK: traveler_id (INT)&#xa;first_name (VARCHAR)&#xa;last_name (VARCHAR)&#xa;email (VARCHAR)&#xa;phone_number (VARCHAR)&#xa;nationality (VARCHAR)&#xa;passport_number (VARCHAR)&#xa;date_of_birth (DATE)&#xa;created_at (TIMESTAMP)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="entity1">
+          <mxGeometry y="26" width="220" height="174" as="geometry"/>
+        </mxCell>
+
+        <!-- VisaApplication Entity -->
+        <mxCell id="entity2" value="VisaApplication" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="480" y="100" width="240" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity2-attr" value="PK: application_id (INT)&#xa;FK: traveler_id (INT)&#xa;FK: officer_id (INT)&#xa;application_date (DATE)&#xa;purpose_of_visit (VARCHAR)&#xa;expected_arrival_date (DATE)&#xa;expected_departure_date (DATE)&#xa;visa_type (VARCHAR)&#xa;status (ENUM)&#xa;verification_date (DATE)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="entity2">
+          <mxGeometry y="26" width="240" height="214" as="geometry"/>
+        </mxCell>
+
+        <!-- Document Entity -->
+        <mxCell id="entity3" value="Document" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="880" y="100" width="240" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity3-attr" value="PK: document_id (INT)&#xa;FK: application_id (INT)&#xa;document_type (VARCHAR)&#xa;file_name (VARCHAR)&#xa;file_path (VARCHAR)&#xa;upload_date (DATE)&#xa;verification_status (ENUM)&#xa;created_at (TIMESTAMP)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="entity3">
+          <mxGeometry y="26" width="240" height="154" as="geometry"/>
+        </mxCell>
+
+        <!-- Payment Entity -->
+        <mxCell id="entity4" value="Payment" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="480" y="480" width="240" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity4-attr" value="PK: payment_id (INT)&#xa;FK: application_id (INT)&#xa;amount (DECIMAL)&#xa;currency (VARCHAR)&#xa;payment_date (DATE)&#xa;payment_method (VARCHAR)&#xa;transaction_id (VARCHAR)&#xa;status (ENUM)&#xa;created_at (TIMESTAMP)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="entity4">
+          <mxGeometry y="26" width="240" height="174" as="geometry"/>
+        </mxCell>
+
+        <!-- Officer Entity -->
+        <mxCell id="entity5" value="Officer" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="100" y="480" width="220" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity5-attr" value="PK: officer_id (INT)&#xa;first_name (VARCHAR)&#xa;last_name (VARCHAR)&#xa;email (VARCHAR)&#xa;department (VARCHAR)&#xa;role (VARCHAR)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="entity5">
+          <mxGeometry y="26" width="220" height="154" as="geometry"/>
+        </mxCell>
+
+        <!-- VisaStatus Entity -->
+        <mxCell id="entity6" value="VisaStatus" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="880" y="480" width="240" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity6-attr" value="PK: status_id (INT)&#xa;FK: application_id (INT)&#xa;status (ENUM)&#xa;status_date (DATE)&#xa;comments (TEXT)&#xa;changed_by (INT)&#xa;rejection_reason (TEXT)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="entity6">
+          <mxGeometry y="26" width="240" height="174" as="geometry"/>
+        </mxCell>
+
+        <!-- Relationship: Traveler to VisaApplication (1:N) -->
+        <mxCell id="rel1" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="entity1" target="entity2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rel1-label1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel1">
+          <mxGeometry x="-0.85" y="-1" relative="1" as="geometry">
+            <mxPoint x="-5" y="-11" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel1-label2" value="N" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel1">
+          <mxGeometry x="0.85" y="-1" relative="1" as="geometry">
+            <mxPoint x="5" y="-11" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel1-label3" value="submits" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel1">
+          <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+            <mxPoint y="-11" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Relationship: VisaApplication to Document (1:N) -->
+        <mxCell id="rel2" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="entity2" target="entity3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rel2-label1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel2">
+          <mxGeometry x="-0.85" y="-1" relative="1" as="geometry">
+            <mxPoint x="-5" y="-11" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel2-label2" value="N" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel2">
+          <mxGeometry x="0.85" y="-1" relative="1" as="geometry">
+            <mxPoint x="5" y="-11" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel2-label3" value="contains" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel2">
+          <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+            <mxPoint y="-11" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Relationship: VisaApplication to Payment (1:1) -->
+        <mxCell id="rel3" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="entity2" target="entity4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rel3-label1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel3">
+          <mxGeometry x="-0.85" y="-1" relative="1" as="geometry">
+            <mxPoint x="-11" y="5" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel3-label2" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel3">
+          <mxGeometry x="0.85" y="-1" relative="1" as="geometry">
+            <mxPoint x="-11" y="-5" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel3-label3" value="requires" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel3">
+          <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+            <mxPoint x="20" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Relationship: Officer to VisaApplication (1:N) -->
+        <mxCell id="rel4" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="entity5" target="entity2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rel4-label1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel4">
+          <mxGeometry x="-0.85" y="-1" relative="1" as="geometry">
+            <mxPoint x="-5" y="-11" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel4-label2" value="N" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel4">
+          <mxGeometry x="0.85" y="-1" relative="1" as="geometry">
+            <mxPoint x="5" y="-11" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel4-label3" value="verifies" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel4">
+          <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+            <mxPoint y="-11" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Relationship: VisaApplication to VisaStatus (1:N) -->
+        <mxCell id="rel5" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="entity2" target="entity6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rel5-label1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel5">
+          <mxGeometry x="-0.85" y="-1" relative="1" as="geometry">
+            <mxPoint x="-5" y="-11" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel5-label2" value="N" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel5">
+          <mxGeometry x="0.85" y="-1" relative="1" as="geometry">
+            <mxPoint x="5" y="-11" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel5-label3" value="tracks" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel5">
+          <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+            <mxPoint y="-11" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
