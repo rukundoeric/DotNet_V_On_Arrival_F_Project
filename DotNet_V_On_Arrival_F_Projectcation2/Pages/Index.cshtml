@@ -1,10 +1,307 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Rwanda Visa On Arrival";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    :root {
+        --rwanda-blue: #00A1DE;
+        --rwanda-yellow: #FAD201;
+        --rwanda-green: #20603D;
+    }
+
+    .hero-section {
+        background: linear-gradient(135deg, var(--rwanda-blue) 0%, var(--rwanda-green) 100%);
+        color: white;
+        padding: 60px 0;
+        margin-bottom: 40px;
+        border-radius: 0 0 20px 20px;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    .hero-subtitle {
+        font-size: 1.3rem;
+        opacity: 0.95;
+    }
+
+    .info-card {
+        background: white;
+        border-left: 4px solid var(--rwanda-yellow);
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .info-card h5 {
+        color: var(--rwanda-green);
+        font-weight: 600;
+    }
+
+    .btn-rwanda {
+        background: var(--rwanda-blue);
+        border: none;
+        color: white;
+        font-weight: 600;
+        padding: 12px 30px;
+        transition: all 0.3s;
+    }
+
+    .btn-rwanda:hover {
+        background: var(--rwanda-green);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .form-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .form-header {
+        background: linear-gradient(90deg, var(--rwanda-blue) 0%, var(--rwanda-green) 100%);
+        color: white;
+        padding: 25px;
+        text-align: center;
+    }
+
+    .form-label {
+        color: var(--rwanda-green);
+        font-weight: 500;
+    }
+
+    .form-control:focus {
+        border-color: var(--rwanda-blue);
+        box-shadow: 0 0 0 0.2rem rgba(0, 161, 222, 0.25);
+    }
+
+    .success-alert {
+        background-color: #d1e7dd;
+        border: 1px solid #badbcc;
+        border-radius: 10px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+
+    .success-alert h3 {
+        color: #0f5132;
+    }
+
+    .success-alert p {
+        color: #0f5132;
+    }
+
+    .reference-number {
+        background-color: #ffffff;
+        border: 2px solid var(--rwanda-green);
+        padding: 20px;
+        border-radius: 10px;
+        font-size: 1.8rem;
+        letter-spacing: 3px;
+        color: var(--rwanda-green);
+        font-weight: bold;
+    }
+
+    .benefits-section {
+        margin-bottom: 50px;
+    }
+
+    .benefit-item {
+        display: flex;
+        align-items: start;
+        margin-bottom: 15px;
+    }
+
+    .benefit-icon {
+        color: var(--rwanda-blue);
+        font-size: 1.5rem;
+        margin-right: 15px;
+    }
+</style>
+
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="hero-title">Welcome to Rwanda</h1>
+        <p class="hero-subtitle">Land of a Thousand Hills | Visa On Arrival Portal</p>
+    </div>
 </div>
+
+<div class="container mb-5">
+    @if (Model.ShowSuccess)
+    {
+        <div class="success-alert">
+            <h3 class="text-center mb-3">✓ Application Submitted Successfully!</h3>
+            <p class="text-center mb-4">Your visa application has been received. Please save your reference number:</p>
+            <div class="reference-number text-center">
+                @Model.ReferenceNumber
+            </div>
+            <p class="text-center mt-4 mb-0">
+                <small style="color: #0f5132;">Present this reference number to the immigration officer upon arrival at Kigali International Airport.</small>
+            </p>
+        </div>
+    }
+
+    <!-- Information Section -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="info-card">
+                <h5>About Rwanda Visa On Arrival</h5>
+                <p class="mb-0">
+                    Rwanda offers visa on arrival for eligible travelers from all countries. Simply complete your pre-registration
+                    online before traveling to expedite your entry process at the airport.
+                </p>
+            </div>
+
+            <div class="row benefits-section">
+                <div class="col-md-6">
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <div>
+                            <strong>Fast Processing</strong><br/>
+                            <small>Pre-registration speeds up immigration clearance</small>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <div>
+                            <strong>30 Days Validity</strong><br/>
+                            <small>Stay up to 30 days for tourism or business</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <div>
+                            <strong>USD $50 Fee</strong><br/>
+                            <small>Payable at the airport upon arrival</small>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <div>
+                            <strong>All Nationalities</strong><br/>
+                            <small>Available to travelers from all countries</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Form -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="form-card">
+                <div class="form-header">
+                    <h3 class="mb-0">Visa On Arrival Application</h3>
+                    <p class="mb-0 mt-2">Please fill in all required information</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        <h5 class="mb-3" style="color: var(--rwanda-green);">Personal Information</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Input.FirstName" class="form-label">First Name</label>
+                                <input asp-for="Input.FirstName" class="form-control" required />
+                                <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Input.LastName" class="form-label">Last Name</label>
+                                <input asp-for="Input.LastName" class="form-control" required />
+                                <span asp-validation-for="Input.LastName" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Input.Email" class="form-label">Email Address</label>
+                                <input asp-for="Input.Email" type="email" class="form-control" required />
+                                <span asp-validation-for="Input.Email" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Input.ContactNumber" class="form-label">Contact Number</label>
+                                <input asp-for="Input.ContactNumber" type="tel" class="form-control" required />
+                                <span asp-validation-for="Input.ContactNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.DateOfBirth" class="form-label">Date of Birth</label>
+                            <input asp-for="Input.DateOfBirth" type="date" class="form-control" required />
+                            <span asp-validation-for="Input.DateOfBirth" class="text-danger"></span>
+                        </div>
+
+                        <hr class="my-4"/>
+
+                        <h5 class="mb-3" style="color: var(--rwanda-green);">Travel Document</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Input.PassportNumber" class="form-label">Passport Number</label>
+                                <input asp-for="Input.PassportNumber" class="form-control" required />
+                                <span asp-validation-for="Input.PassportNumber" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Input.Nationality" class="form-label">Nationality</label>
+                                <input asp-for="Input.Nationality" class="form-control" required />
+                                <span asp-validation-for="Input.Nationality" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-4"/>
+
+                        <h5 class="mb-3" style="color: var(--rwanda-green);">Travel Details</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Input.ArrivalDate" class="form-label">Expected Arrival Date</label>
+                                <input asp-for="Input.ArrivalDate" type="date" class="form-control" required />
+                                <span asp-validation-for="Input.ArrivalDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Input.ExpectedDepartureDate" class="form-label">Expected Departure Date</label>
+                                <input asp-for="Input.ExpectedDepartureDate" type="date" class="form-control" required />
+                                <span asp-validation-for="Input.ExpectedDepartureDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.PurposeOfVisit" class="form-label">Purpose of Visit</label>
+                            <textarea asp-for="Input.PurposeOfVisit" class="form-control" rows="3" required
+                                      placeholder="e.g., Tourism, Business, Conference, Family Visit"></textarea>
+                            <span asp-validation-for="Input.PurposeOfVisit" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Input.AccommodationAddress" class="form-label">Accommodation Address in Rwanda</label>
+                            <textarea asp-for="Input.AccommodationAddress" class="form-control" rows="3" required
+                                      placeholder="Hotel name and address or host address"></textarea>
+                            <span asp-validation-for="Input.AccommodationAddress" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-rwanda btn-lg">Submit Application</button>
+                        </div>
+
+                        <p class="text-center text-muted mt-3 mb-0">
+                            <small>By submitting this form, you agree to provide accurate information for visa processing.</small>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
