@@ -151,6 +151,32 @@ const ArrivalsExits = () => {
     }
   };
 
+  const handleDownloadVisa = async (applicationId, referenceNumber) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/VisaApplications/${applicationId}/visa-document`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Rwanda-Visa-${referenceNumber}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setSuccess('Visa document downloaded successfully');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to download visa document');
+    }
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -381,22 +407,41 @@ const ArrivalsExits = () => {
                           </span>
                         </td>
                         <td style={{ padding: '12px', textAlign: 'center' }}>
-                          {record.entryStatus === 1 && !record.actualDepartureDate && (
-                            <button
-                              onClick={() => handleRecordDeparture(record.id)}
-                              style={{
-                                padding: '5px 10px',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                                backgroundColor: '#1a56db',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px'
-                              }}
-                            >
-                              Record Departure
-                            </button>
-                          )}
+                          <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                            {record.entryStatus === 1 && !record.actualDepartureDate && (
+                              <button
+                                onClick={() => handleRecordDeparture(record.id)}
+                                style={{
+                                  padding: '5px 10px',
+                                  cursor: 'pointer',
+                                  fontSize: '12px',
+                                  backgroundColor: '#1a56db',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px'
+                                }}
+                              >
+                                Record Departure
+                              </button>
+                            )}
+                            {record.visaApplication?.id && (
+                              <button
+                                onClick={() => handleDownloadVisa(record.visaApplication.id, record.visaApplication.referenceNumber)}
+                                style={{
+                                  padding: '5px 10px',
+                                  cursor: 'pointer',
+                                  fontSize: '12px',
+                                  backgroundColor: '#20603D',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px'
+                                }}
+                                title="Download Visa Document"
+                              >
+                                📄 Download Visa
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}

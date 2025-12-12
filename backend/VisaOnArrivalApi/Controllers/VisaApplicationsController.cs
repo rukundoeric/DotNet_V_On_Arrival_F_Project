@@ -15,12 +15,14 @@ public class VisaApplicationsController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly ILogger<VisaApplicationsController> _logger;
     private readonly IEmailService _emailService;
+    private readonly IVisaDocumentService _visaDocumentService;
 
-    public VisaApplicationsController(ApplicationDbContext context, ILogger<VisaApplicationsController> logger, IEmailService emailService)
+    public VisaApplicationsController(ApplicationDbContext context, ILogger<VisaApplicationsController> logger, IEmailService emailService, IVisaDocumentService visaDocumentService)
     {
         _context = context;
         _logger = logger;
         _emailService = emailService;
+        _visaDocumentService = visaDocumentService;
     }
 
     // GET: api/VisaApplications
@@ -373,23 +375,34 @@ public class VisaApplicationsController : ControllerBase
 
             _logger.LogInformation("Visa application with ID: {Id} approved successfully", id);
 
-            // Send approval email in background
+            // Generate PDF and send approval email with document in background
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    await _emailService.SendVisaApprovalEmailAsync(
+                    _logger.LogInformation("Generating visa document PDF for reference number: {ReferenceNumber}", visaApplication.ReferenceNumber);
+
+                    // Generate PDF document
+                    byte[] visaPdfBytes = _visaDocumentService.GenerateVisaDocument(visaApplication);
+
+                    _logger.LogInformation("PDF generated successfully ({Size} bytes), sending email to {Email}",
+                        visaPdfBytes.Length, visaApplication.Email);
+
+                    // Send email with PDF attachment
+                    await _emailService.SendVisaApprovalEmailWithDocumentAsync(
                         visaApplication.Email,
                         visaApplication.FirstName,
                         visaApplication.LastName,
-                        visaApplication.ReferenceNumber
+                        visaApplication.ReferenceNumber,
+                        visaPdfBytes
                     );
-                    _logger.LogInformation("Approval email sent to {Email} for reference number: {ReferenceNumber}",
+
+                    _logger.LogInformation("Approval email with visa document sent to {Email} for reference number: {ReferenceNumber}",
                         visaApplication.Email, visaApplication.ReferenceNumber);
                 }
                 catch (Exception emailEx)
                 {
-                    _logger.LogWarning(emailEx, "Failed to send approval email to {Email} for reference number: {ReferenceNumber}",
+                    _logger.LogWarning(emailEx, "Failed to send approval email with document to {Email} for reference number: {ReferenceNumber}",
                         visaApplication.Email, visaApplication.ReferenceNumber);
                 }
             });
@@ -457,6 +470,46 @@ public class VisaApplicationsController : ControllerBase
         {
             _logger.LogError(ex, "Error occurred while rejecting visa application with ID: {Id}", id);
             return StatusCode(500, "An error occurred while rejecting the visa application");
+        }
+    }
+
+    // GET: api/VisaApplications/5/visa-document
+    [HttpGet("{id}/visa-document")]
+    [RequirePermission("visa_applications.view")]
+    public async Task<IActionResult> DownloadVisaDocument(int id)
+    {
+        try
+        {
+            _logger.LogInformation("Generating visa document for application ID: {Id}", id);
+            var visaApplication = await _context.VisaApplications.FindAsync(id);
+
+            if (visaApplication == null)
+            {
+                _logger.LogWarning("Visa application with ID: {Id} not found", id);
+                return NotFound(new { message = "Visa application not found" });
+            }
+
+            if (visaApplication.ApplicationStatus != ApplicationStatus.Approved)
+            {
+                _logger.LogWarning("Attempt to download visa document for non-approved application ID: {Id}", id);
+                return BadRequest(new { message = "Visa document can only be generated for approved applications" });
+            }
+
+            _logger.LogInformation("Generating PDF for approved application with reference number: {ReferenceNumber}", visaApplication.ReferenceNumber);
+
+            // Generate PDF document
+            byte[] visaPdfBytes = _visaDocumentService.GenerateVisaDocument(visaApplication);
+
+            _logger.LogInformation("PDF generated successfully ({Size} bytes) for reference number: {ReferenceNumber}",
+                visaPdfBytes.Length, visaApplication.ReferenceNumber);
+
+            // Return PDF file
+            return File(visaPdfBytes, "application/pdf", $"Rwanda-Visa-{visaApplication.ReferenceNumber}.pdf");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while generating visa document for application ID: {Id}", id);
+            return StatusCode(500, "An error occurred while generating the visa document");
         }
     }
 
