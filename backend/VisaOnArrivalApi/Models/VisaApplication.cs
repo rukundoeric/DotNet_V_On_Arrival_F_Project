@@ -61,6 +61,7 @@ public class VisaApplication
 
     public DateTime UpdatedAt { get; set; }
 
-    // Navigation property
+    // Navigation properties
     public ArrivalRecord? ArrivalRecord { get; set; }
+    public ICollection<UserApplication> UserApplications { get; set; } = new List<UserApplication>();
 }

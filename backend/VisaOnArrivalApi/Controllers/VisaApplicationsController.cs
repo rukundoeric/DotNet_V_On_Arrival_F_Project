@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using VisaOnArrivalApi.Data;
 using VisaOnArrivalApi.Models;
 using VisaOnArrivalApi.DTOs;
+using VisaOnArrivalApi.Services;
+using VisaOnArrivalApi.Authorization;
 
 namespace VisaOnArrivalApi.Controllers;
 
@@ -12,15 +14,18 @@ public class VisaApplicationsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<VisaApplicationsController> _logger;
+    private readonly IEmailService _emailService;
 
-    public VisaApplicationsController(ApplicationDbContext context, ILogger<VisaApplicationsController> logger)
+    public VisaApplicationsController(ApplicationDbContext context, ILogger<VisaApplicationsController> logger, IEmailService emailService)
     {
         _context = context;
         _logger = logger;
+        _emailService = emailService;
     }
 
     // GET: api/VisaApplications
     [HttpGet]
+    [RequirePermission("visa_applications.view")]
     public async Task<ActionResult<IEnumerable<VisaApplicationResponseDto>>> GetVisaApplications()
     {
         try
@@ -40,8 +45,44 @@ public class VisaApplicationsController : ControllerBase
         }
     }
 
+    // GET: api/VisaApplications/my-applications
+    [HttpGet("my-applications")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<ActionResult<IEnumerable<VisaApplicationResponseDto>>> GetMyApplications()
+    {
+        try
+        {
+            // Get user ID from JWT claims
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
+            {
+                return Unauthorized(new { error = "Invalid user claims" });
+            }
+
+            _logger.LogInformation("Retrieving applications for user ID: {UserId}", userId);
+
+            // Get applications linked to this user
+            var applications = await _context.UserApplications
+                .Where(ua => ua.UserId == userId)
+                .Include(ua => ua.VisaApplication)
+                    .ThenInclude(v => v.ArrivalRecord)
+                .Select(ua => ua.VisaApplication)
+                .OrderByDescending(v => v.ApplicationDate)
+                .ToListAsync();
+
+            _logger.LogInformation("Successfully retrieved {Count} applications for user ID: {UserId}", applications.Count, userId);
+            return applications.Select(v => MapToDto(v)).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while retrieving user applications");
+            return StatusCode(500, "An error occurred while retrieving your applications");
+        }
+    }
+
     // GET: api/VisaApplications/5
     [HttpGet("{id}")]
+    [RequirePermission("visa_applications.view")]
     public async Task<ActionResult<VisaApplicationResponseDto>> GetVisaApplication(int id)
     {
         try
@@ -69,6 +110,7 @@ public class VisaApplicationsController : ControllerBase
 
     // GET: api/VisaApplications/reference/{referenceNumber}
     [HttpGet("reference/{referenceNumber}")]
+    [RequirePermission("visa_applications.view")]
     public async Task<ActionResult<VisaApplicationResponseDto>> GetByReferenceNumber(string referenceNumber)
     {
         try
@@ -95,6 +137,7 @@ public class VisaApplicationsController : ControllerBase
     }
 
     // POST: api/VisaApplications
+    // Public endpoint - no authentication required for visa application submission
     [HttpPost]
     public async Task<ActionResult<VisaApplicationResponseDto>> CreateVisaApplication(CreateVisaApplicationDto dto)
     {
@@ -132,7 +175,46 @@ public class VisaApplicationsController : ControllerBase
             _context.VisaApplications.Add(visaApplication);
             await _context.SaveChangesAsync();
 
+            // If user is authenticated, link this application to their account
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var userId))
+                {
+                    var userApplication = new UserApplication
+                    {
+                        UserId = userId,
+                        VisaApplicationId = visaApplication.Id,
+                        LinkedAt = DateTime.UtcNow
+                    };
+                    _context.UserApplications.Add(userApplication);
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Linked application {ApplicationId} to user {UserId}", visaApplication.Id, userId);
+                }
+            }
+
             _logger.LogInformation("Successfully created visa application with reference number: {ReferenceNumber}", referenceNumber);
+
+            // Send confirmation email in background (fire-and-forget)
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _emailService.SendVisaConfirmationEmailAsync(
+                        dto.Email,
+                        dto.FirstName,
+                        dto.LastName,
+                        referenceNumber,
+                        dto.ArrivalDate
+                    );
+                    _logger.LogInformation("Confirmation email sent to {Email} for reference number: {ReferenceNumber}", dto.Email, referenceNumber);
+                }
+                catch (Exception emailEx)
+                {
+                    _logger.LogWarning(emailEx, "Failed to send confirmation email to {Email} for reference number: {ReferenceNumber}", dto.Email, referenceNumber);
+                }
+            });
+
             return CreatedAtAction(nameof(GetVisaApplication), new { id = visaApplication.Id }, MapToDto(visaApplication));
         }
         catch (Exception ex)
@@ -144,6 +226,7 @@ public class VisaApplicationsController : ControllerBase
 
     // PUT: api/VisaApplications/5
     [HttpPut("{id}")]
+    [RequirePermission("visa_applications.update")]
     public async Task<IActionResult> UpdateVisaApplication(int id, VisaApplication visaApplication)
     {
         try
@@ -155,12 +238,63 @@ public class VisaApplicationsController : ControllerBase
             }
 
             _logger.LogInformation("Updating visa application with ID: {Id}", id);
+
+            // Get the old status before updating
+            var existingApplication = await _context.VisaApplications.AsNoTracking().FirstOrDefaultAsync(v => v.Id == id);
+            if (existingApplication == null)
+            {
+                _logger.LogWarning("Visa application with ID: {Id} not found during update", id);
+                return NotFound();
+            }
+
+            var oldStatus = existingApplication.ApplicationStatus;
+            var newStatus = visaApplication.ApplicationStatus;
+
             _context.Entry(visaApplication).State = EntityState.Modified;
 
             try
             {
                 await _context.SaveChangesAsync();
                 _logger.LogInformation("Successfully updated visa application with ID: {Id}", id);
+
+                // Send email if status changed to Approved or Rejected (in background)
+                if (oldStatus != newStatus)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            if (newStatus == ApplicationStatus.Approved)
+                            {
+                                await _emailService.SendVisaApprovalEmailAsync(
+                                    visaApplication.Email,
+                                    visaApplication.FirstName,
+                                    visaApplication.LastName,
+                                    visaApplication.ReferenceNumber
+                                );
+                                _logger.LogInformation("Approval email sent to {Email} for reference number: {ReferenceNumber}",
+                                    visaApplication.Email, visaApplication.ReferenceNumber);
+                            }
+                            else if (newStatus == ApplicationStatus.Rejected)
+                            {
+                                await _emailService.SendVisaRejectionEmailAsync(
+                                    visaApplication.Email,
+                                    visaApplication.FirstName,
+                                    visaApplication.LastName,
+                                    visaApplication.ReferenceNumber,
+                                    "Please contact immigration services for more information"
+                                );
+                                _logger.LogInformation("Rejection email sent to {Email} for reference number: {ReferenceNumber}",
+                                    visaApplication.Email, visaApplication.ReferenceNumber);
+                            }
+                        }
+                        catch (Exception emailEx)
+                        {
+                            _logger.LogWarning(emailEx, "Failed to send status change email to {Email} for reference number: {ReferenceNumber}",
+                                visaApplication.Email, visaApplication.ReferenceNumber);
+                        }
+                    });
+                }
             }
             catch (DbUpdateConcurrencyException ex)
             {
@@ -187,6 +321,7 @@ public class VisaApplicationsController : ControllerBase
 
     // DELETE: api/VisaApplications/5
     [HttpDelete("{id}")]
+    [RequirePermission("visa_applications.delete")]
     public async Task<IActionResult> DeleteVisaApplication(int id)
     {
         try
@@ -209,6 +344,119 @@ public class VisaApplicationsController : ControllerBase
         {
             _logger.LogError(ex, "Error occurred while deleting visa application with ID: {Id}", id);
             return StatusCode(500, "An error occurred while deleting the visa application");
+        }
+    }
+
+    // POST: api/VisaApplications/5/approve
+    [HttpPost("{id}/approve")]
+    [RequirePermission("visa_applications.approve")]
+    public async Task<IActionResult> ApproveVisaApplication(int id)
+    {
+        try
+        {
+            _logger.LogInformation("Approving visa application with ID: {Id}", id);
+            var visaApplication = await _context.VisaApplications.FindAsync(id);
+
+            if (visaApplication == null)
+            {
+                _logger.LogWarning("Visa application with ID: {Id} not found", id);
+                return NotFound(new { message = "Visa application not found" });
+            }
+
+            if (visaApplication.ApplicationStatus == ApplicationStatus.Approved)
+            {
+                return BadRequest(new { message = "Visa application is already approved" });
+            }
+
+            visaApplication.ApplicationStatus = ApplicationStatus.Approved;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Visa application with ID: {Id} approved successfully", id);
+
+            // Send approval email in background
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _emailService.SendVisaApprovalEmailAsync(
+                        visaApplication.Email,
+                        visaApplication.FirstName,
+                        visaApplication.LastName,
+                        visaApplication.ReferenceNumber
+                    );
+                    _logger.LogInformation("Approval email sent to {Email} for reference number: {ReferenceNumber}",
+                        visaApplication.Email, visaApplication.ReferenceNumber);
+                }
+                catch (Exception emailEx)
+                {
+                    _logger.LogWarning(emailEx, "Failed to send approval email to {Email} for reference number: {ReferenceNumber}",
+                        visaApplication.Email, visaApplication.ReferenceNumber);
+                }
+            });
+
+            return Ok(new { message = "Visa application approved successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while approving visa application with ID: {Id}", id);
+            return StatusCode(500, "An error occurred while approving the visa application");
+        }
+    }
+
+    // POST: api/VisaApplications/5/reject
+    [HttpPost("{id}/reject")]
+    [RequirePermission("visa_applications.reject")]
+    public async Task<IActionResult> RejectVisaApplication(int id, [FromBody] RejectVisaApplicationDto rejectDto)
+    {
+        try
+        {
+            _logger.LogInformation("Rejecting visa application with ID: {Id}", id);
+            var visaApplication = await _context.VisaApplications.FindAsync(id);
+
+            if (visaApplication == null)
+            {
+                _logger.LogWarning("Visa application with ID: {Id} not found", id);
+                return NotFound(new { message = "Visa application not found" });
+            }
+
+            if (visaApplication.ApplicationStatus == ApplicationStatus.Rejected)
+            {
+                return BadRequest(new { message = "Visa application is already rejected" });
+            }
+
+            visaApplication.ApplicationStatus = ApplicationStatus.Rejected;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Visa application with ID: {Id} rejected successfully", id);
+
+            // Send rejection email in background
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _emailService.SendVisaRejectionEmailAsync(
+                        visaApplication.Email,
+                        visaApplication.FirstName,
+                        visaApplication.LastName,
+                        visaApplication.ReferenceNumber,
+                        rejectDto?.Reason ?? "Please contact immigration services for more information"
+                    );
+                    _logger.LogInformation("Rejection email sent to {Email} for reference number: {ReferenceNumber}",
+                        visaApplication.Email, visaApplication.ReferenceNumber);
+                }
+                catch (Exception emailEx)
+                {
+                    _logger.LogWarning(emailEx, "Failed to send rejection email to {Email} for reference number: {ReferenceNumber}",
+                        visaApplication.Email, visaApplication.ReferenceNumber);
+                }
+            });
+
+            return Ok(new { message = "Visa application rejected successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while rejecting visa application with ID: {Id}", id);
+            return StatusCode(500, "An error occurred while rejecting the visa application");
         }
     }
 

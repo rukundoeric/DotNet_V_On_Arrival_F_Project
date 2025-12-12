@@ -1,159 +1,282 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VisaOnArrivalApi.Data;
+using VisaOnArrivalApi.DTOs.User;
+using VisaOnArrivalApi.Authorization;
 using VisaOnArrivalApi.Models;
 
 namespace VisaOnArrivalApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UsersController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-    private readonly ILogger<UsersController> _logger;
 
-    public UsersController(ApplicationDbContext context, ILogger<UsersController> logger)
+    public UsersController(ApplicationDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
     // GET: api/Users
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+    [RequirePermission("users.view")]
+    public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers([FromQuery] string? search = null, [FromQuery] string? role = null)
     {
-        try
-        {
-            _logger.LogInformation("Retrieving all users");
-            var users = await _context.Users.ToListAsync();
+        var query = _context.Users
+            .Include(u => u.Permissions)
+            .AsQueryable();
 
-            _logger.LogInformation("Successfully retrieved {Count} users", users.Count);
-            return users;
-        }
-        catch (Exception ex)
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            _logger.LogError(ex, "Error occurred while retrieving users");
-            return StatusCode(500, "An error occurred while retrieving users");
+            query = query.Where(u =>
+                u.FirstName.Contains(search) ||
+                u.LastName.Contains(search) ||
+                u.Email.Contains(search));
         }
+
+        if (!string.IsNullOrWhiteSpace(role) && Enum.TryParse<UserRole>(role, true, out var userRole))
+        {
+            query = query.Where(u => u.Role == userRole);
+        }
+
+        var users = await query
+            .OrderByDescending(u => u.CreatedAt)
+            .Select(u => new UserDto
+            {
+                Id = u.Id,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Email = u.Email,
+                PhoneNumber = u.PhoneNumber,
+                Role = u.Role.ToString(),
+                IsActive = u.IsActive,
+                CreatedAt = u.CreatedAt,
+                UpdatedAt = u.UpdatedAt,
+                Permissions = u.Permissions.Select(p => new PermissionDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Category = p.Category
+                }).ToList()
+            })
+            .ToListAsync();
+
+        return Ok(users);
     }
 
     // GET: api/Users/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<User>> GetUser(int id)
+    [RequirePermission("users.view")]
+    public async Task<ActionResult<UserDto>> GetUser(int id)
     {
-        try
-        {
-            _logger.LogInformation("Retrieving user with ID: {Id}", id);
-            var user = await _context.Users.FindAsync(id);
+        var user = await _context.Users
+            .Include(u => u.Permissions)
+            .FirstOrDefaultAsync(u => u.Id == id);
 
-            if (user == null)
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber,
+            Role = user.Role.ToString(),
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt,
+            Permissions = user.Permissions.Select(p => new PermissionDto
             {
-                _logger.LogWarning("User with ID: {Id} not found", id);
-                return NotFound();
-            }
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Category = p.Category
+            }).ToList()
+        };
 
-            _logger.LogInformation("Successfully retrieved user with ID: {Id}", id);
-            return user;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while retrieving user with ID: {Id}", id);
-            return StatusCode(500, "An error occurred while retrieving the user");
-        }
+        return Ok(userDto);
     }
 
     // POST: api/Users
     [HttpPost]
-    public async Task<ActionResult<User>> CreateUser(User user)
+    [RequirePermission("users.create")]
+    public async Task<ActionResult<UserDto>> CreateUser([FromBody] CreateUserDto createDto)
     {
-        try
+        // Check if user with same email already exists
+        var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == createDto.Email);
+        if (existingUser != null)
         {
-            _logger.LogInformation("Creating new user: {Email}", user.Email);
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            return BadRequest(new { message = "User with this email already exists" });
+        }
 
-            _logger.LogInformation("Successfully created user with ID: {Id}", user.Id);
-            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
-        }
-        catch (Exception ex)
+        // Hash password
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword(createDto.Password);
+
+        var user = new Models.User
         {
-            _logger.LogError(ex, "Error occurred while creating user: {Email}", user.Email);
-            return StatusCode(500, "An error occurred while creating the user");
+            FirstName = createDto.FirstName,
+            LastName = createDto.LastName,
+            Email = createDto.Email,
+            PasswordHash = passwordHash,
+            PhoneNumber = createDto.PhoneNumber,
+            Role = createDto.Role,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        // Assign permissions if provided
+        if (createDto.PermissionIds.Any())
+        {
+            var permissions = await _context.Permissions
+                .Where(p => createDto.PermissionIds.Contains(p.Id))
+                .ToListAsync();
+            user.Permissions = permissions;
         }
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber,
+            Role = user.Role.ToString(),
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt,
+            Permissions = user.Permissions.Select(p => new PermissionDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Category = p.Category
+            }).ToList()
+        };
+
+        return CreatedAtAction(nameof(GetUser), new { id = user.Id }, userDto);
     }
 
     // PUT: api/Users/5
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateUser(int id, User user)
+    [RequirePermission("users.update")]
+    public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDto updateDto)
     {
-        try
+        var user = await _context.Users.FindAsync(id);
+        if (user == null)
         {
-            if (id != user.Id)
-            {
-                _logger.LogWarning("ID mismatch: URL ID {UrlId} does not match body ID {BodyId}", id, user.Id);
-                return BadRequest();
-            }
-
-            _logger.LogInformation("Updating user with ID: {Id}", id);
-            _context.Entry(user).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Successfully updated user with ID: {Id}", id);
-            }
-            catch (DbUpdateConcurrencyException ex)
-            {
-                if (!UserExists(id))
-                {
-                    _logger.LogWarning("User with ID: {Id} not found during update", id);
-                    return NotFound();
-                }
-                else
-                {
-                    _logger.LogError(ex, "Concurrency error while updating user with ID: {Id}", id);
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return NotFound(new { message = "User not found" });
         }
-        catch (Exception ex)
+
+        // Check if another user with same email exists
+        var existingUser = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id != id && u.Email == updateDto.Email);
+        if (existingUser != null)
         {
-            _logger.LogError(ex, "Error occurred while updating user with ID: {Id}", id);
-            return StatusCode(500, "An error occurred while updating the user");
+            return BadRequest(new { message = "Another user with this email already exists" });
         }
+
+        user.FirstName = updateDto.FirstName;
+        user.LastName = updateDto.LastName;
+        user.Email = updateDto.Email;
+        user.PhoneNumber = updateDto.PhoneNumber;
+        user.Role = updateDto.Role;
+        user.IsActive = updateDto.IsActive;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 
     // DELETE: api/Users/5
     [HttpDelete("{id}")]
+    [RequirePermission("users.delete")]
     public async Task<IActionResult> DeleteUser(int id)
     {
-        try
+        var user = await _context.Users.FindAsync(id);
+        if (user == null)
         {
-            _logger.LogInformation("Deleting user with ID: {Id}", id);
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                _logger.LogWarning("User with ID: {Id} not found for deletion", id);
-                return NotFound();
-            }
-
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Successfully deleted user with ID: {Id}", id);
-            return NoContent();
+            return NotFound(new { message = "User not found" });
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while deleting user with ID: {Id}", id);
-            return StatusCode(500, "An error occurred while deleting the user");
-        }
+
+        _context.Users.Remove(user);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 
-    private bool UserExists(int id)
+    // PUT: api/Users/5/change-password
+    [HttpPut("{id}/change-password")]
+    [RequirePermission("users.update")]
+    public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordDto changePasswordDto)
     {
-        return _context.Users.Any(e => e.Id == id);
+        var user = await _context.Users.FindAsync(id);
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(changePasswordDto.NewPassword);
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Password changed successfully" });
+    }
+
+    // POST: api/Users/5/permissions
+    [HttpPost("{id}/permissions")]
+    [RequirePermission("permissions.manage")]
+    public async Task<IActionResult> AssignPermissions(int id, [FromBody] AssignPermissionsDto assignDto)
+    {
+        var user = await _context.Users
+            .Include(u => u.Permissions)
+            .FirstOrDefaultAsync(u => u.Id == id);
+
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+
+        var permissions = await _context.Permissions
+            .Where(p => assignDto.PermissionIds.Contains(p.Id))
+            .ToListAsync();
+
+        user.Permissions = permissions;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Permissions assigned successfully" });
+    }
+
+    // PATCH: api/Users/5/toggle-status
+    [HttpPatch("{id}/toggle-status")]
+    [RequirePermission("users.update")]
+    public async Task<IActionResult> ToggleUserStatus(int id)
+    {
+        var user = await _context.Users.FindAsync(id);
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+
+        user.IsActive = !user.IsActive;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = $"User {(user.IsActive ? "activated" : "deactivated")} successfully", isActive = user.IsActive });
     }
 }

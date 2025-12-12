@@ -1,7 +1,18 @@
-import React, { useState } from 'react';
-import { visaApplicationsApi } from '../services/api';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5262/api';
 
 const VisaApplicationForm = () => {
+  const { token } = useAuth() || {};
+
+  // Get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -10,17 +21,36 @@ const VisaApplicationForm = () => {
     dateOfBirth: '',
     passportNumber: '',
     nationality: '',
-    arrivalDate: '',
-    expectedDepartureDate: '',
+    arrivalDate: getTodayDate(),
+    expectedDepartureDate: getTodayDate(),
     purposeOfVisit: '',
     accommodationAddress: ''
   });
 
+  const [countries, setCountries] = useState([]);
+  const [loadingCountries, setLoadingCountries] = useState(true);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState('');
   const [submitError, setSubmitError] = useState('');
+
+  // Fetch countries on component mount
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/Countries?activeOnly=true`);
+        // Extract countries from paginated response
+        setCountries(response.data.data || []);
+      } catch (error) {
+        console.error('Error fetching countries:', error);
+      } finally {
+        setLoadingCountries(false);
+      }
+    };
+
+    fetchCountries();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -93,7 +123,16 @@ const VisaApplicationForm = () => {
 
       console.log('Converted data:', submitData);
 
-      const response = await visaApplicationsApi.create(submitData);
+      // Prepare headers - include Authorization if user is authenticated
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('Including auth token in request');
+      }
+
+      const response = await axios.post(`${API_URL}/VisaApplications`, submitData, { headers });
       console.log('Response:', response);
 
       setReferenceNumber(response.data.referenceNumber);
@@ -123,9 +162,17 @@ const VisaApplicationForm = () => {
         errorMessage = 'Cannot connect to the server. Please ensure the backend API is running.';
       } else if (error.response) {
         // Server responded with error
-        errorMessage = error.response.data?.message ||
-                      error.response.data ||
-                      `Server error: ${error.response.status} ${error.response.statusText}`;
+        const responseData = error.response.data;
+        if (typeof responseData === 'string') {
+          errorMessage = responseData;
+        } else if (responseData?.error) {
+          // Handle {error: "message"} format from API
+          errorMessage = responseData.error;
+        } else if (responseData?.message) {
+          errorMessage = responseData.message;
+        } else {
+          errorMessage = `Server error: ${error.response.status} ${error.response.statusText}`;
+        }
       } else if (error.request) {
         // Request made but no response
         errorMessage = 'No response from server. Please check if the backend is running.';
@@ -280,13 +327,22 @@ const VisaApplicationForm = () => {
               </div>
               <div className="form-group">
                 <label className="form-label">Nationality *</label>
-                <input
-                  type="text"
+                <select
                   name="nationality"
                   className={`form-control ${errors.nationality ? 'error' : ''}`}
                   value={formData.nationality}
                   onChange={handleChange}
-                />
+                  disabled={loadingCountries}
+                >
+                  <option value="">
+                    {loadingCountries ? 'Loading countries...' : 'Select your nationality'}
+                  </option>
+                  {countries.map(country => (
+                    <option key={country.id} value={country.name}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
                 {errors.nationality && <span className="error-message">{errors.nationality}</span>}
               </div>
             </div>
@@ -301,6 +357,7 @@ const VisaApplicationForm = () => {
                   className={`form-control ${errors.arrivalDate ? 'error' : ''}`}
                   value={formData.arrivalDate}
                   onChange={handleChange}
+                  min={getTodayDate()}
                 />
                 {errors.arrivalDate && <span className="error-message">{errors.arrivalDate}</span>}
               </div>
@@ -312,6 +369,7 @@ const VisaApplicationForm = () => {
                   className={`form-control ${errors.expectedDepartureDate ? 'error' : ''}`}
                   value={formData.expectedDepartureDate}
                   onChange={handleChange}
+                  min={getTodayDate()}
                 />
                 {errors.expectedDepartureDate && <span className="error-message">{errors.expectedDepartureDate}</span>}
               </div>

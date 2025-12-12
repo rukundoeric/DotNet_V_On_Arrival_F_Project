@@ -64,3 +64,9 @@ public class VisaApplicationResponseDto
     public string ApplicationStatus { get; set; } = string.Empty;
     public DateTime ApplicationDate { get; set; }
 }
+
+public class RejectVisaApplicationDto
+{
+    [MaxLength(500)]
+    public string? Reason { get; set; }
+}

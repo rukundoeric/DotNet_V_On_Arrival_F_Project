@@ -6,7 +6,7 @@
 ### Variables for testing
 @testFirstName = John
 @testLastName = Doe
-@testEmail = john.doe@example.com
+@testEmail = ericrukundo005@gmail.com
 @testPassport = AB123456
 @testNationality = American
 

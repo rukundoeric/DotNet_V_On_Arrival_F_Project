@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VisaOnArrivalApi.Data;
 
@@ -11,9 +12,11 @@ using VisaOnArrivalApi.Data;
 namespace VisaOnArrivalApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251209163252_AddPermissionsSystem")]
+    partial class AddPermissionsSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -77,52 +80,6 @@ namespace VisaOnArrivalApi.Migrations
                         .IsUnique();
 
                     b.ToTable("ArrivalRecords");
-                });
-
-            modelBuilder.Entity("VisaOnArrivalApi.Models.Country", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("nvarchar(3)");
-
-                    b.Property<string>("Code2")
-                        .HasMaxLength(2)
-                        .HasColumnType("nvarchar(2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.HasIndex("Code2");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("Countries");
                 });
 
             modelBuilder.Entity("VisaOnArrivalApi.Models.Permission", b =>
@@ -211,16 +168,9 @@ namespace VisaOnArrivalApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PhoneNumber")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -232,35 +182,6 @@ namespace VisaOnArrivalApi.Migrations
                     b.HasIndex("EmployeeId");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("VisaOnArrivalApi.Models.UserApplication", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("LinkedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("VisaApplicationId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("VisaApplicationId");
-
-                    b.HasIndex("UserId", "VisaApplicationId")
-                        .IsUnique();
-
-                    b.ToTable("UserApplications");
                 });
 
             modelBuilder.Entity("VisaOnArrivalApi.Models.UserPermission", b =>
@@ -431,25 +352,6 @@ namespace VisaOnArrivalApi.Migrations
                     b.Navigation("CreatedByUser");
                 });
 
-            modelBuilder.Entity("VisaOnArrivalApi.Models.UserApplication", b =>
-                {
-                    b.HasOne("VisaOnArrivalApi.Models.User", "User")
-                        .WithMany("UserApplications")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("VisaOnArrivalApi.Models.VisaApplication", "VisaApplication")
-                        .WithMany("UserApplications")
-                        .HasForeignKey("VisaApplicationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-
-                    b.Navigation("VisaApplication");
-                });
-
             modelBuilder.Entity("VisaOnArrivalApi.Models.UserPermission", b =>
                 {
                     b.HasOne("VisaOnArrivalApi.Models.User", "GrantedByUser")
@@ -493,16 +395,12 @@ namespace VisaOnArrivalApi.Migrations
 
                     b.Navigation("GrantedPermissions");
 
-                    b.Navigation("UserApplications");
-
                     b.Navigation("UserPermissions");
                 });
 
             modelBuilder.Entity("VisaOnArrivalApi.Models.VisaApplication", b =>
                 {
                     b.Navigation("ArrivalRecord");
-
-                    b.Navigation("UserApplications");
                 });
 #pragma warning restore 612, 618
         }

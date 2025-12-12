@@ -13,6 +13,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<VisaApplication> VisaApplications { get; set; }
     public DbSet<ArrivalRecord> ArrivalRecords { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<Permission> Permissions { get; set; }
+    public DbSet<UserPermission> UserPermissions { get; set; }
+    public DbSet<Country> Countries { get; set; }
+    public DbSet<UserApplication> UserApplications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -91,6 +95,89 @@ public class ApplicationDbContext : DbContext
                 .WithMany(u => u.CreatedUsers)
                 .HasForeignKey(e => e.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Permission configuration
+        modelBuilder.Entity<Permission>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Name).IsUnique();
+            entity.HasIndex(e => e.Category);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+        });
+
+        // UserPermission configuration
+        modelBuilder.Entity<UserPermission>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.UserId, e.PermissionId }).IsUnique();
+
+            entity.Property(e => e.GrantedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            // Relationships
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.UserPermissions)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Permission)
+                .WithMany(p => p.UserPermissions)
+                .HasForeignKey(e => e.PermissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.GrantedByUser)
+                .WithMany(u => u.GrantedPermissions)
+                .HasForeignKey(e => e.GrantedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configure many-to-many relationship between User and Permission
+        modelBuilder.Entity<User>()
+            .HasMany(u => u.Permissions)
+            .WithMany(p => p.Users)
+            .UsingEntity<UserPermission>(
+                j => j.HasOne(up => up.Permission)
+                    .WithMany(p => p.UserPermissions)
+                    .HasForeignKey(up => up.PermissionId),
+                j => j.HasOne(up => up.User)
+                    .WithMany(u => u.UserPermissions)
+                    .HasForeignKey(up => up.UserId)
+            );
+
+        // Country configuration
+        modelBuilder.Entity<Country>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Name).IsUnique();
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.Code2);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+        });
+
+        // UserApplication configuration
+        modelBuilder.Entity<UserApplication>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.UserId, e.VisaApplicationId }).IsUnique();
+
+            entity.Property(e => e.LinkedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            // Relationships
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.UserApplications)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.VisaApplication)
+                .WithMany(v => v.UserApplications)
+                .HasForeignKey(e => e.VisaApplicationId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
