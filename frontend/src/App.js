@@ -11,6 +11,7 @@ import ManageCountries from './pages/ManageCountries';
 import ManageUsers from './pages/ManageUsers';
 import ManageApplications from './pages/ManageApplications';
 import ArrivalsExits from './pages/ArrivalsExits';
+import VerifyVisa from './pages/VerifyVisa';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -85,6 +86,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/verify" element={<VerifyVisa />} />
+          <Route path="/verify/:refNumber" element={<VerifyVisa />} />
 
           {/* Protected Routes - Admin */}
           <Route

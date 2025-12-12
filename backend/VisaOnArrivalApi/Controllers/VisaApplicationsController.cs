@@ -138,6 +138,107 @@ public class VisaApplicationsController : ControllerBase
         }
     }
 
+    // GET: api/VisaApplications/verify/{referenceNumber}
+    // Public endpoint - no authentication required
+    [HttpGet("verify/{referenceNumber}")]
+    public async Task<ActionResult<object>> VerifyVisaApplication(string referenceNumber)
+    {
+        try
+        {
+            _logger.LogInformation("Public verification request for reference number: {ReferenceNumber}", referenceNumber);
+            var visaApplication = await _context.VisaApplications
+                .Include(v => v.ArrivalRecord)
+                .FirstOrDefaultAsync(v => v.ReferenceNumber == referenceNumber);
+
+            if (visaApplication == null)
+            {
+                _logger.LogWarning("Verification failed - reference number not found: {ReferenceNumber}", referenceNumber);
+                return NotFound(new {
+                    found = false,
+                    message = "No visa application found with this reference number"
+                });
+            }
+
+            // Check if visa is still valid based on departure date
+            var isValid = false;
+            var validityStatus = "Unknown";
+
+            if (visaApplication.ApplicationStatus == ApplicationStatus.Approved)
+            {
+                // Check if current date is within validity period
+                var now = DateTime.UtcNow;
+
+                // If person has actually arrived, use actual arrival date for validation
+                var effectiveArrivalDate = visaApplication.ArrivalRecord?.ActualArrivalDate ?? visaApplication.ArrivalDate;
+
+                // If person has departed, they can no longer use the visa
+                if (visaApplication.ArrivalRecord?.ActualDepartureDate != null)
+                {
+                    isValid = false;
+                    validityStatus = "Departed - No Longer Valid";
+                }
+                // Check if within validity period (has arrived or arrival date has passed)
+                else if (now >= effectiveArrivalDate && now <= visaApplication.ExpectedDepartureDate)
+                {
+                    isValid = true;
+                    validityStatus = "Valid";
+                }
+                // Not yet arrival date
+                else if (now < visaApplication.ArrivalDate)
+                {
+                    isValid = true;
+                    validityStatus = "Not Yet Active";
+                }
+                // Past departure date
+                else
+                {
+                    isValid = false;
+                    validityStatus = "Expired";
+                }
+            }
+            else if (visaApplication.ApplicationStatus == ApplicationStatus.Pending)
+            {
+                validityStatus = "Pending Approval";
+            }
+            else if (visaApplication.ApplicationStatus == ApplicationStatus.Rejected)
+            {
+                validityStatus = "Rejected";
+            }
+
+            var response = new
+            {
+                found = true,
+                isValid = isValid,
+                validityStatus = validityStatus,
+                referenceNumber = visaApplication.ReferenceNumber,
+                firstName = visaApplication.FirstName,
+                lastName = visaApplication.LastName,
+                nationality = visaApplication.Nationality,
+                passportNumber = visaApplication.PassportNumber,
+                applicationStatus = visaApplication.ApplicationStatus.ToString(),
+                arrivalDate = visaApplication.ArrivalDate,
+                expectedDepartureDate = visaApplication.ExpectedDepartureDate,
+                purposeOfVisit = visaApplication.PurposeOfVisit,
+                applicationDate = visaApplication.ApplicationDate,
+                hasArrived = visaApplication.ArrivalRecord?.ActualArrivalDate != null,
+                hasDeparted = visaApplication.ArrivalRecord?.ActualDepartureDate != null
+            };
+
+            _logger.LogInformation("Verification successful for reference number: {ReferenceNumber}, Status: {Status}",
+                referenceNumber, validityStatus);
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred during verification for reference number: {ReferenceNumber}", referenceNumber);
+            return StatusCode(500, new {
+                found = false,
+                message = "An error occurred while verifying the visa application"
+            });
+        }
+    }
+
     // POST: api/VisaApplications
     // Public endpoint - no authentication required for visa application submission
     [HttpPost]

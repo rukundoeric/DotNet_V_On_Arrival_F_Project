@@ -2,15 +2,27 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using VisaOnArrivalApi.Models;
+using QRCoder;
 
 namespace VisaOnArrivalApi.Services;
 
 public class VisaDocumentService : IVisaDocumentService
 {
-    public VisaDocumentService()
+    private readonly IConfiguration _configuration;
+
+    public VisaDocumentService(IConfiguration configuration)
     {
+        _configuration = configuration;
         // Set QuestPDF license - Community license for non-commercial use
         QuestPDF.Settings.License = LicenseType.Community;
+    }
+
+    private byte[] GenerateQRCode(string text)
+    {
+        using var qrGenerator = new QRCodeGenerator();
+        using var qrCodeData = qrGenerator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
+        using var qrCode = new PngByteQRCode(qrCodeData);
+        return qrCode.GetGraphic(20);
     }
 
     public byte[] GenerateVisaDocument(VisaApplication application)
@@ -19,6 +31,11 @@ public class VisaDocumentService : IVisaDocumentService
         var visaValidFrom = application.ArrivalDate;
         var visaValidUntil = application.ExpectedDepartureDate;
         var durationOfStay = (visaValidUntil - visaValidFrom).Days;
+
+        // Generate QR code with verification URL
+        var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:3000";
+        var verificationUrl = $"{frontendUrl}/verify/{application.ReferenceNumber}";
+        var qrCodeBytes = GenerateQRCode(verificationUrl);
 
         var document = Document.Create(container =>
         {
@@ -109,14 +126,22 @@ public class VisaDocumentService : IVisaDocumentService
                     });
 
                 page.Footer()
-                    .Height(50)
+                    .Height(80)
                     .Background(Colors.Blue.Lighten3)
                     .Padding(10)
-                    .AlignCenter()
-                    .Text(text =>
+                    .Row(row =>
                     {
-                        text.Span("This is an official document issued by the Republic of Rwanda. ").FontSize(8);
-                        text.Span($"Reference: {application.ReferenceNumber}").FontSize(8).Bold();
+                        row.RelativeItem().Column(column =>
+                        {
+                            column.Item().AlignCenter().Text(text =>
+                            {
+                                text.Span("This is an official document issued by the Republic of Rwanda. ").FontSize(8);
+                                text.Span($"Reference: {application.ReferenceNumber}").FontSize(8).Bold();
+                            });
+                            column.Item().PaddingTop(5).AlignCenter().Text("Scan QR code to verify this document")
+                                .FontSize(7).Italic();
+                        });
+                        row.ConstantItem(60).AlignRight().AlignMiddle().Image(qrCodeBytes).FitArea();
                     });
             });
         });
