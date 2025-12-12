@@ -12,6 +12,7 @@ import ManageUsers from './pages/ManageUsers';
 import ManageApplications from './pages/ManageApplications';
 import ArrivalsExits from './pages/ArrivalsExits';
 import VerifyVisa from './pages/VerifyVisa';
+import QuickAction from './pages/QuickAction';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -48,25 +49,65 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 // Home page component
 const Home = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  const handleDashboard = () => {
+    if (user?.role === 'Admin') {
+      navigate('/admin/dashboard');
+    } else if (user?.role === 'Officer') {
+      navigate('/officer/dashboard');
+    } else if (user?.role === 'User') {
+      navigate('/user/dashboard');
+    }
+  };
 
   return (
     <div className="App">
       <div className="hero-section">
         <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-            <button
-              onClick={() => navigate('/login')}
-              className="btn-rwanda"
-              style={{ marginRight: '10px', backgroundColor: '#fff', color: '#1e5631', border: '2px solid #1e5631' }}
-            >
-              Login
-            </button>
-            <button
-              onClick={() => navigate('/signup')}
-              className="btn-rwanda"
-            >
-              Sign Up
-            </button>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px', gap: '10px' }}>
+            {!isAuthenticated ? (
+              <>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="btn-rwanda"
+                  style={{ backgroundColor: '#fff', color: '#1e5631', border: '2px solid #1e5631' }}
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => navigate('/signup')}
+                  className="btn-rwanda"
+                >
+                  Sign Up
+                </button>
+              </>
+            ) : (
+              <>
+                <span style={{ color: '#fff', alignSelf: 'center', marginRight: '10px' }}>
+                  Welcome, {user?.firstName}!
+                </span>
+                <button
+                  onClick={handleDashboard}
+                  className="btn-rwanda"
+                  style={{ backgroundColor: '#fff', color: '#1e5631', border: '2px solid #1e5631' }}
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="btn-rwanda"
+                  style={{ backgroundColor: '#d32f2f', color: '#fff', border: '2px solid #d32f2f' }}
+                >
+                  Logout
+                </button>
+              </>
+            )}
           </div>
           <h1 className="hero-title">Welcome to Rwanda</h1>
           <p className="hero-subtitle">Land of a Thousand Hills | Visa On Arrival Portal</p>
@@ -88,6 +129,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/verify" element={<VerifyVisa />} />
           <Route path="/verify/:refNumber" element={<VerifyVisa />} />
+          <Route path="/officer/quick-action/:refNumber" element={<QuickAction />} />
 
           {/* Protected Routes - Admin */}
           <Route

@@ -298,23 +298,27 @@ public class VisaApplicationsController : ControllerBase
 
             _logger.LogInformation("Successfully created visa application with reference number: {ReferenceNumber}", referenceNumber);
 
-            // Send confirmation email in background (fire-and-forget)
+            // Send acknowledgement email with PDF in background (fire-and-forget)
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    await _emailService.SendVisaConfirmationEmailAsync(
+                    // Generate acknowledgement PDF
+                    byte[] acknowledgementPdfBytes = _visaDocumentService.GenerateAcknowledgementDocument(visaApplication);
+
+                    // Send email with PDF attachment
+                    await _emailService.SendVisaAcknowledgementEmailAsync(
                         dto.Email,
                         dto.FirstName,
                         dto.LastName,
                         referenceNumber,
-                        dto.ArrivalDate
+                        acknowledgementPdfBytes
                     );
-                    _logger.LogInformation("Confirmation email sent to {Email} for reference number: {ReferenceNumber}", dto.Email, referenceNumber);
+                    _logger.LogInformation("Acknowledgement email with PDF sent to {Email} for reference number: {ReferenceNumber}", dto.Email, referenceNumber);
                 }
                 catch (Exception emailEx)
                 {
-                    _logger.LogWarning(emailEx, "Failed to send confirmation email to {Email} for reference number: {ReferenceNumber}", dto.Email, referenceNumber);
+                    _logger.LogWarning(emailEx, "Failed to send acknowledgement email to {Email} for reference number: {ReferenceNumber}", dto.Email, referenceNumber);
                 }
             });
 
@@ -625,6 +629,199 @@ public class VisaApplicationsController : ControllerBase
         var dayOfYear = DateTime.UtcNow.DayOfYear.ToString("D3");
         var random = new Random().Next(100, 999);
         return $"RW{year}{dayOfYear}{random}";
+    }
+
+    // GET: api/VisaApplications/quick-action/{referenceNumber}
+    // Get application details for officer quick action from QR code
+    [HttpGet("quick-action/{referenceNumber}")]
+    [RequirePermission("visa_applications.view")]
+    public async Task<ActionResult<object>> GetApplicationForQuickAction(string referenceNumber)
+    {
+        try
+        {
+            var visaApplication = await _context.VisaApplications
+                .FirstOrDefaultAsync(v => v.ReferenceNumber == referenceNumber);
+
+            if (visaApplication == null)
+            {
+                return NotFound(new { message = "Visa application not found" });
+            }
+
+            return Ok(new
+            {
+                id = visaApplication.Id,
+                referenceNumber = visaApplication.ReferenceNumber,
+                firstName = visaApplication.FirstName,
+                lastName = visaApplication.LastName,
+                nationality = visaApplication.Nationality,
+                passportNumber = visaApplication.PassportNumber,
+                email = visaApplication.Email,
+                contactNumber = visaApplication.ContactNumber,
+                purposeOfVisit = visaApplication.PurposeOfVisit,
+                arrivalDate = visaApplication.ArrivalDate,
+                expectedDepartureDate = visaApplication.ExpectedDepartureDate,
+                applicationStatus = visaApplication.ApplicationStatus.ToString(),
+                applicationDate = visaApplication.ApplicationDate
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting application for quick action: {ReferenceNumber}", referenceNumber);
+            return StatusCode(500, "An error occurred while retrieving the application");
+        }
+    }
+
+    // POST: api/VisaApplications/quick-approve/{referenceNumber}
+    // Approve application and record arrival in one action
+    [HttpPost("quick-approve/{referenceNumber}")]
+    [RequirePermission("visa_applications.approve")]
+    public async Task<IActionResult> QuickApproveAndRecordArrival(string referenceNumber)
+    {
+        try
+        {
+            var visaApplication = await _context.VisaApplications
+                .Include(v => v.ArrivalRecord)
+                .FirstOrDefaultAsync(v => v.ReferenceNumber == referenceNumber);
+
+            if (visaApplication == null)
+            {
+                return NotFound(new { message = "Visa application not found" });
+            }
+
+            if (visaApplication.ApplicationStatus == ApplicationStatus.Approved)
+            {
+                return BadRequest(new { message = "Visa application is already approved" });
+            }
+
+            // Approve the application
+            visaApplication.ApplicationStatus = ApplicationStatus.Approved;
+
+            // Create or update arrival record
+            if (visaApplication.ArrivalRecord == null)
+            {
+                visaApplication.ArrivalRecord = new ArrivalRecord
+                {
+                    ActualArrivalDate = DateTime.UtcNow,
+                    VisaApplicationId = visaApplication.Id
+                };
+                _context.ArrivalRecords.Add(visaApplication.ArrivalRecord);
+            }
+            else if (visaApplication.ArrivalRecord.ActualArrivalDate == null)
+            {
+                visaApplication.ArrivalRecord.ActualArrivalDate = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Visa application {ReferenceNumber} quick-approved with arrival recorded", referenceNumber);
+
+            // Generate PDF and send approval email in background
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    byte[] visaPdfBytes = _visaDocumentService.GenerateVisaDocument(visaApplication);
+                    await _emailService.SendVisaApprovalEmailWithDocumentAsync(
+                        visaApplication.Email,
+                        visaApplication.FirstName,
+                        visaApplication.LastName,
+                        visaApplication.ReferenceNumber,
+                        visaPdfBytes
+                    );
+                    _logger.LogInformation("Approval email sent for quick-approved application {ReferenceNumber}", referenceNumber);
+                }
+                catch (Exception emailEx)
+                {
+                    _logger.LogWarning(emailEx, "Failed to send approval email for {ReferenceNumber}", referenceNumber);
+                }
+            });
+
+            return Ok(new { message = "Visa application approved and arrival recorded successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during quick approve for {ReferenceNumber}", referenceNumber);
+            return StatusCode(500, "An error occurred while processing the request");
+        }
+    }
+
+    // POST: api/VisaApplications/quick-reject/{referenceNumber}
+    // Quick reject application from QR code
+    [HttpPost("quick-reject/{referenceNumber}")]
+    [RequirePermission("visa_applications.reject")]
+    public async Task<IActionResult> QuickReject(string referenceNumber, [FromBody] RejectVisaApplicationDto rejectDto)
+    {
+        try
+        {
+            var visaApplication = await _context.VisaApplications
+                .FirstOrDefaultAsync(v => v.ReferenceNumber == referenceNumber);
+
+            if (visaApplication == null)
+            {
+                return NotFound(new { message = "Visa application not found" });
+            }
+
+            if (visaApplication.ApplicationStatus == ApplicationStatus.Rejected)
+            {
+                return BadRequest(new { message = "Visa application is already rejected" });
+            }
+
+            visaApplication.ApplicationStatus = ApplicationStatus.Rejected;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Visa application {ReferenceNumber} quick-rejected", referenceNumber);
+
+            // Send rejection email in background
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _emailService.SendVisaRejectionEmailAsync(
+                        visaApplication.Email,
+                        visaApplication.FirstName,
+                        visaApplication.LastName,
+                        visaApplication.ReferenceNumber,
+                        rejectDto?.Reason ?? "Application did not meet the requirements"
+                    );
+                    _logger.LogInformation("Rejection email sent for {ReferenceNumber}", referenceNumber);
+                }
+                catch (Exception emailEx)
+                {
+                    _logger.LogWarning(emailEx, "Failed to send rejection email for {ReferenceNumber}", referenceNumber);
+                }
+            });
+
+            return Ok(new { message = "Visa application rejected successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during quick reject for {ReferenceNumber}", referenceNumber);
+            return StatusCode(500, "An error occurred while rejecting the application");
+        }
+    }
+
+    // GET: api/VisaApplications/{id}/acknowledgement-document
+    [HttpGet("{id}/acknowledgement-document")]
+    public async Task<IActionResult> GetAcknowledgementDocument(int id)
+    {
+        try
+        {
+            var visaApplication = await _context.VisaApplications.FindAsync(id);
+
+            if (visaApplication == null)
+            {
+                return NotFound(new { message = "Visa application not found" });
+            }
+
+            byte[] pdfBytes = _visaDocumentService.GenerateAcknowledgementDocument(visaApplication);
+
+            return File(pdfBytes, "application/pdf", $"Acknowledgement_{visaApplication.ReferenceNumber}.pdf");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating acknowledgement document for application ID: {Id}", id);
+            return StatusCode(500, "An error occurred while generating the acknowledgement document");
+        }
     }
 
     private VisaApplicationResponseDto MapToDto(VisaApplication application)

@@ -15,9 +15,43 @@ public class EmailService : IEmailService
         _logger = logger;
     }
 
+    private (string smtpHost, int smtpPort, string smtpUsername, string smtpPassword, string fromEmail, string fromName) GetEmailConfiguration()
+    {
+        var emailProvider = Environment.GetEnvironmentVariable("EMAIL_PROVIDER") ?? "GMAIL";
+
+        if (emailProvider.ToUpper() == "GMAIL")
+        {
+            // Gmail configuration - use hardcoded credentials
+            return (
+                smtpHost: "smtp.gmail.com",
+                smtpPort: 587,
+                smtpUsername: "irembotestug651@gmail.com",
+                smtpPassword: "loiv ewem fhsy avna",
+                fromEmail: "irembotestug651@gmail.com",
+                fromName: "Rwanda Immigration Services"
+            );
+        }
+        else
+        {
+            // Mailtrap configuration
+            var emailSettings = _configuration.GetSection("EmailSettings");
+            var smtpUsername = Environment.GetEnvironmentVariable("SMTP_USERNAME") ?? emailSettings["SmtpUsername"];
+            var smtpPassword = Environment.GetEnvironmentVariable("SMTP_PASSWORD") ?? emailSettings["SmtpPassword"];
+
+            return (
+                smtpHost: emailSettings["SmtpHost"],
+                smtpPort: int.Parse(emailSettings["SmtpPort"] ?? "587"),
+                smtpUsername: smtpUsername,
+                smtpPassword: smtpPassword,
+                fromEmail: emailSettings["FromEmail"],
+                fromName: emailSettings["FromName"]
+            );
+        }
+    }
+
     public async Task SendVisaConfirmationEmailAsync(string toEmail, string firstName, string lastName, string referenceNumber, DateTime arrivalDate)
     {
-        var subject = "Rwanda Visa On Arrival - Application Received";
+        var subject = "Rwanda Visa On Arrival - Registration Confirmed";
         var htmlBody = $@"
 <!DOCTYPE html>
 <html>
@@ -31,7 +65,6 @@ public class EmailService : IEmailService
         .reference-number {{ font-size: 32px; font-weight: bold; color: #20603D; letter-spacing: 3px; }}
         .info-box {{ background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #FAD201; border-radius: 4px; }}
         .footer {{ text-align: center; margin-top: 30px; font-size: 12px; color: #666; }}
-        .btn {{ display: inline-block; background: #00A1DE; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 15px 0; }}
     </style>
 </head>
 <body>
@@ -42,45 +75,38 @@ public class EmailService : IEmailService
         </div>
         <div class=""content"">
             <h2>Dear {firstName} {lastName},</h2>
-            <p>Thank you for submitting your Visa On Arrival application for Rwanda. We have successfully received your application.</p>
+            <p>Thank you for registering for your Visa On Arrival to Rwanda.</p>
 
             <div class=""reference-box"">
                 <p style=""margin: 0; font-size: 14px; color: #666;"">Your Reference Number:</p>
                 <div class=""reference-number"">{referenceNumber}</div>
-                <p style=""margin: 10px 0 0 0; font-size: 12px; color: #666;"">Please save this number for your records</p>
+                <p style=""margin: 10px 0 0 0; font-size: 12px; color: #666;"">Present this at the airport</p>
             </div>
 
-            <div class=""info-box"">
-                <h3 style=""margin-top: 0; color: #20603D;"">Application Details</h3>
-                <p><strong>Name:</strong> {firstName} {lastName}</p>
-                <p><strong>Expected Arrival:</strong> {arrivalDate:MMMM dd, yyyy}</p>
-                <p><strong>Application Status:</strong> Pending Review</p>
-            </div>
-
-            <h3 style=""color: #20603D;"">What's Next?</h3>
+            <h3 style=""color: #20603D;"">At Kigali International Airport:</h3>
             <ol>
-                <li><strong>Save Your Reference Number:</strong> Keep the reference number {referenceNumber} safe. You'll need it at the airport.</li>
-                <li><strong>Prepare Documents:</strong> Ensure you have your passport, return ticket, and accommodation details.</li>
-                <li><strong>At the Airport:</strong> Present your reference number at the Visa On Arrival counter at Kigali International Airport.</li>
-                <li><strong>Payment:</strong> The visa fee of USD $50 will be collected at the airport.</li>
+                <li>Proceed to the Visa On Arrival counter</li>
+                <li>Present your reference number: <strong>{referenceNumber}</strong></li>
+                <li>Show your passport and travel documents</li>
+                <li>Pay the visa fee of USD $50</li>
+                <li>Receive your visa stamp</li>
             </ol>
 
             <div class=""info-box"">
-                <h4 style=""margin-top: 0; color: #20603D;"">Important Reminders</h4>
+                <h4 style=""margin-top: 0; color: #20603D;"">Please Bring:</h4>
                 <ul style=""margin: 10px 0;"">
-                    <li>Arrive at least 3 hours before your flight</li>
-                    <li>Have USD $50 ready for the visa fee</li>
-                    <li>Your passport must be valid for at least 6 months</li>
-                    <li>Proof of accommodation and return ticket may be requested</li>
+                    <li>Valid passport (6+ months validity)</li>
+                    <li>USD $50 for visa fee</li>
+                    <li>Return/onward ticket</li>
+                    <li>Proof of accommodation</li>
                 </ul>
             </div>
 
-            <p>If you have any questions, please don't hesitate to contact the Rwanda Immigration Department.</p>
+            <p>Welcome to Rwanda!</p>
 
             <p style=""margin-top: 30px;"">
                 <strong>Warm Regards,</strong><br>
-                Rwanda Immigration Services<br>
-                <em>""Rwanda - Remarkable, Rwanda""</em>
+                Rwanda Immigration Services
             </p>
         </div>
         <div class=""footer"">
@@ -249,7 +275,7 @@ public class EmailService : IEmailService
 
     public async Task SendVisaRejectionEmailAsync(string toEmail, string firstName, string lastName, string referenceNumber, string reason)
     {
-        var subject = "Rwanda Visa On Arrival - Application Status Update";
+        var subject = "Rwanda Visa On Arrival - Registration Status Update";
         var htmlBody = $@"
 <!DOCTYPE html>
 <html>
@@ -311,16 +337,7 @@ public class EmailService : IEmailService
             _logger.LogInformation("=== EMAIL SENDING START ===");
             _logger.LogInformation("Attempting to send email to: {ToEmail}, Subject: {Subject}", toEmail, subject);
 
-            var emailSettings = _configuration.GetSection("EmailSettings");
-            var smtpHost = emailSettings["SmtpHost"];
-            var smtpPort = int.Parse(emailSettings["SmtpPort"] ?? "587");
-
-            // Check environment variables first, then fall back to appsettings
-            var smtpUsername = Environment.GetEnvironmentVariable("SMTP_USERNAME") ?? emailSettings["SmtpUsername"];
-            var smtpPassword = Environment.GetEnvironmentVariable("SMTP_PASSWORD") ?? emailSettings["SmtpPassword"];
-
-            var fromEmail = emailSettings["FromEmail"];
-            var fromName = emailSettings["FromName"];
+            var (smtpHost, smtpPort, smtpUsername, smtpPassword, fromEmail, fromName) = GetEmailConfiguration();
 
             // Log configuration (mask password)
             _logger.LogInformation("Email Configuration:");
@@ -394,16 +411,7 @@ public class EmailService : IEmailService
             _logger.LogInformation("=== EMAIL WITH ATTACHMENT SENDING START ===");
             _logger.LogInformation("Attempting to send email with attachment to: {ToEmail}, Subject: {Subject}, Attachment: {FileName}", toEmail, subject, attachmentFileName);
 
-            var emailSettings = _configuration.GetSection("EmailSettings");
-            var smtpHost = emailSettings["SmtpHost"];
-            var smtpPort = int.Parse(emailSettings["SmtpPort"] ?? "587");
-
-            // Check environment variables first, then fall back to appsettings
-            var smtpUsername = Environment.GetEnvironmentVariable("SMTP_USERNAME") ?? emailSettings["SmtpUsername"];
-            var smtpPassword = Environment.GetEnvironmentVariable("SMTP_PASSWORD") ?? emailSettings["SmtpPassword"];
-
-            var fromEmail = emailSettings["FromEmail"];
-            var fromName = emailSettings["FromName"];
+            var (smtpHost, smtpPort, smtpUsername, smtpPassword, fromEmail, fromName) = GetEmailConfiguration();
 
             // Log configuration (mask password)
             _logger.LogInformation("Email Configuration:");
@@ -473,5 +481,67 @@ public class EmailService : IEmailService
             _logger.LogInformation("=== EMAIL WITH ATTACHMENT SENDING END (WITH ERRORS) ===");
             // Don't throw - we don't want email failures to break the application flow
         }
+    }
+
+    public async Task SendVisaAcknowledgementEmailAsync(string toEmail, string firstName, string lastName, string referenceNumber, byte[] acknowledgementPdfBytes)
+    {
+        var subject = $"Visa On Arrival Registration Confirmed - {referenceNumber}";
+        var htmlBody = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background: linear-gradient(135deg, #20603D 0%, #00A1DE 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+        .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+        .reference-box {{ background: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; margin: 20px 0; }}
+        .reference-number {{ font-size: 24px; font-weight: bold; color: #2e7d32; }}
+        .footer {{ text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px; }}
+        .check-icon {{ font-size: 48px; color: #4caf50; }}
+    </style>
+</head>
+<body>
+    <div class=""container"">
+        <div class=""header"">
+            <h1>✓ Registration Confirmed</h1>
+            <p>Republic of Rwanda - Immigration Services</p>
+        </div>
+        <div class=""content"">
+            <p>Dear {firstName} {lastName},</p>
+
+            <p>Thank you for registering for your Visa On Arrival. Your registration has been successfully received.</p>
+
+            <div class=""reference-box"">
+                <p style=""margin: 0; font-size: 14px; color: #666;"">Your Reference Number</p>
+                <p class=""reference-number"">{referenceNumber}</p>
+                <p style=""margin: 0; font-size: 12px; color: #666;"">Present this at the airport immigration counter</p>
+            </div>
+
+            <h3>At Kigali International Airport:</h3>
+            <ol>
+                <li>Proceed to the Visa On Arrival counter</li>
+                <li>Present your reference number and the attached document</li>
+                <li>Pay the visa fee of USD $50</li>
+                <li>Receive your visa stamp</li>
+            </ol>
+
+            <p><strong>Your acknowledgement document is attached to this email.</strong> Please print it or save it on your mobile device to present at the airport.</p>
+
+            <p>Welcome to Rwanda - Land of a Thousand Hills!</p>
+
+            <p>Best regards,<br>
+            <strong>Rwanda Immigration Services</strong><br>
+            Ministry of Immigration</p>
+        </div>
+        <div class=""footer"">
+            <p>This is an automated message from Rwanda Immigration Services</p>
+            <p>&copy; {DateTime.UtcNow.Year} Republic of Rwanda. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+        await SendEmailWithAttachmentAsync(toEmail, subject, htmlBody, acknowledgementPdfBytes, $"Acknowledgement_{referenceNumber}.pdf");
     }
 }

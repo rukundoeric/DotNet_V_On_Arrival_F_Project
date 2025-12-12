@@ -154,4 +154,134 @@ public class VisaDocumentService : IVisaDocumentService
         table.Cell().PaddingVertical(5).Text(label).SemiBold().FontSize(10);
         table.Cell().PaddingVertical(5).Text(value).FontSize(10);
     }
+
+    public byte[] GenerateAcknowledgementDocument(VisaApplication application)
+    {
+        // Generate QR code with officer action URL
+        var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:3000";
+        var officerActionUrl = $"{frontendUrl}/officer/quick-action/{application.ReferenceNumber}";
+        var qrCodeBytes = GenerateQRCode(officerActionUrl);
+
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(40);
+                page.PageColor(Colors.White);
+                page.DefaultTextStyle(x => x.FontSize(11).FontFamily("Arial"));
+
+                page.Header()
+                    .Height(120)
+                    .Background(Colors.Green.Lighten3)
+                    .Padding(20)
+                    .Column(column =>
+                    {
+                        column.Item().AlignCenter().Text("REPUBLIC OF RWANDA")
+                            .FontSize(20).Bold().FontColor(Colors.Green.Darken2);
+                        column.Item().AlignCenter().Text("MINISTRY OF IMMIGRATION")
+                            .FontSize(14).SemiBold();
+                        column.Item().PaddingTop(10).AlignCenter().Text("VISA APPLICATION ACKNOWLEDGEMENT")
+                            .FontSize(16).Bold().FontColor(Colors.Green.Darken1);
+                    });
+
+                page.Content()
+                    .PaddingTop(20)
+                    .Column(column =>
+                    {
+                        // Success Message
+                        column.Item().PaddingBottom(20).AlignCenter()
+                            .Column(innerColumn =>
+                            {
+                                innerColumn.Item().AlignCenter().Text("✓")
+                                    .FontSize(48).FontColor(Colors.Green.Medium).Bold();
+                                innerColumn.Item().AlignCenter().Text("Registration Received Successfully")
+                                    .FontSize(16).Bold().FontColor(Colors.Green.Darken1);
+                            });
+
+                        // Reference Number Box
+                        column.Item().PaddingVertical(15).Background(Colors.Green.Lighten4).Padding(15)
+                            .AlignCenter()
+                            .Column(refColumn =>
+                            {
+                                refColumn.Item().AlignCenter().Text("Your Reference Number")
+                                    .FontSize(12).FontColor(Colors.Grey.Darken1);
+                                refColumn.Item().AlignCenter().Text(application.ReferenceNumber)
+                                    .FontSize(24).Bold().FontColor(Colors.Green.Darken2);
+                                refColumn.Item().PaddingTop(5).AlignCenter().Text("Present this at the airport immigration counter")
+                                    .FontSize(9).Italic().FontColor(Colors.Grey.Darken1);
+                            });
+
+                        column.Item().PaddingTop(20).Text("REGISTRATION DETAILS")
+                            .FontSize(13).Bold().FontColor(Colors.Green.Darken1);
+
+                        column.Item().PaddingTop(10).Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(2);
+                            });
+
+                            AddTableRow(table, "Applicant Name:", $"{application.FirstName} {application.LastName}");
+                            AddTableRow(table, "Nationality:", application.Nationality);
+                            AddTableRow(table, "Passport Number:", application.PassportNumber);
+                            AddTableRow(table, "Email:", application.Email);
+                            AddTableRow(table, "Contact Number:", application.ContactNumber);
+                            AddTableRow(table, "Purpose of Visit:", application.PurposeOfVisit);
+                            AddTableRow(table, "Expected Arrival:", application.ArrivalDate.ToString("dd MMM yyyy"));
+                            AddTableRow(table, "Expected Departure:", application.ExpectedDepartureDate.ToString("dd MMM yyyy"));
+                            AddTableRow(table, "Registration Date:", application.ApplicationDate.ToString("dd MMM yyyy HH:mm"));
+                        });
+
+                        column.Item().PaddingTop(20).Text("AT THE AIRPORT")
+                            .FontSize(13).Bold().FontColor(Colors.Green.Darken1);
+
+                        column.Item().PaddingTop(10).Column(stepsColumn =>
+                        {
+                            stepsColumn.Item().PaddingBottom(5).Text("1. Present this document and your reference number at immigration")
+                                .FontSize(10);
+                            stepsColumn.Item().PaddingBottom(5).Text("2. Pay the visa fee of USD $50")
+                                .FontSize(10);
+                            stepsColumn.Item().PaddingBottom(5).Text("3. Receive your visa stamp")
+                                .FontSize(10);
+                        });
+
+                        // Large QR Code Section - Main Focus
+                        column.Item().PaddingTop(30).AlignCenter()
+                            .Column(qrSection =>
+                            {
+                                qrSection.Item().AlignCenter().Text("IMMIGRATION OFFICER VERIFICATION")
+                                    .FontSize(14).Bold().FontColor(Colors.Blue.Darken2);
+                                qrSection.Item().PaddingTop(5).AlignCenter().Text("Scan QR code for quick processing")
+                                    .FontSize(11).FontColor(Colors.Grey.Darken1);
+
+                                qrSection.Item().PaddingTop(15).AlignCenter()
+                                    .Border(3).BorderColor(Colors.Blue.Medium).Padding(20)
+                                    .Width(250).Height(250)
+                                    .Image(qrCodeBytes).FitArea();
+
+                                qrSection.Item().PaddingTop(10).AlignCenter().Text("Officer access required")
+                                    .FontSize(9).Italic().FontColor(Colors.Grey.Medium);
+                            });
+                    });
+
+                page.Footer()
+                    .Height(50)
+                    .Background(Colors.Green.Lighten3)
+                    .Padding(10)
+                    .AlignCenter()
+                    .AlignMiddle()
+                    .Column(column =>
+                    {
+                        column.Item().AlignCenter().Text("Republic of Rwanda - Immigration Services")
+                            .FontSize(9).SemiBold();
+                        column.Item().AlignCenter().Text($"Generated on: {DateTime.UtcNow:dd MMM yyyy HH:mm} UTC")
+                            .FontSize(7).Italic().FontColor(Colors.Grey.Darken1);
+                    });
+            });
+        });
+
+        return document.GeneratePdf();
+    }
 }
