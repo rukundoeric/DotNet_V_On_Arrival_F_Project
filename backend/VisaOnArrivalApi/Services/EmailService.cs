@@ -53,61 +53,71 @@ public class EmailService : IEmailService
 <html>
 <head>
     <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; background: #f9fafb; margin: 0; padding: 0; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #00A1DE 0%, #20603D 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-        .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
-        .reference-box {{ background: white; border: 3px solid #20603D; padding: 20px; margin: 20px 0; text-align: center; border-radius: 8px; }}
-        .reference-number {{ font-size: 32px; font-weight: bold; color: #20603D; letter-spacing: 3px; }}
-        .info-box {{ background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #FAD201; border-radius: 4px; }}
-        .footer {{ text-align: center; margin-top: 30px; font-size: 12px; color: #666; }}
+        .header {{ background: #004892; color: white; padding: 40px 30px; text-align: center; }}
+        .header h1 {{ margin: 0 0 10px 0; font-size: 28px; font-weight: 700; }}
+        .header p {{ margin: 0; font-size: 16px; opacity: 0.95; }}
+        .content {{ background: white; padding: 40px 30px; }}
+        .reference-box {{ background: #CFE3F7; border: 3px solid #004892; padding: 25px; margin: 25px 0; text-align: center; border-radius: 12px; }}
+        .reference-label {{ margin: 0; font-size: 14px; color: #6b7280; font-weight: 600; }}
+        .reference-number {{ font-size: 36px; font-weight: bold; color: #004892; letter-spacing: 4px; margin: 10px 0; }}
+        .reference-note {{ margin: 10px 0 0 0; font-size: 13px; color: #6b7280; }}
+        .info-box {{ background: #f0f9ff; padding: 20px; margin: 20px 0; border-left: 4px solid #004892; border-radius: 4px; }}
+        .info-box h4 {{ margin-top: 0; color: #004892; font-size: 16px; }}
+        .section-title {{ color: #004892; font-size: 18px; margin-top: 25px; margin-bottom: 15px; }}
+        ol, ul {{ color: #1f2937; line-height: 1.8; }}
+        .footer {{ text-align: center; margin-top: 30px; padding: 20px; background: #f9fafb; font-size: 12px; color: #6b7280; }}
     </style>
 </head>
 <body>
     <div class=""container"">
         <div class=""header"">
-            <h1>Welcome to Rwanda</h1>
-            <p style=""font-size: 18px; margin: 10px 0 0 0;"">Land of a Thousand Hills</p>
+            <h1>🇷🇼 Welcome to Rwanda</h1>
+            <p>Land of a Thousand Hills</p>
         </div>
         <div class=""content"">
-            <h2>Dear {firstName} {lastName},</h2>
-            <p>Thank you for registering for your Visa On Arrival to Rwanda.</p>
+            <h2 style=""color: #004892; margin-top: 0;"">Dear {firstName} {lastName},</h2>
+            <p>Thank you for registering for your Visa On Arrival to Rwanda. Your registration has been successfully received and confirmed.</p>
 
             <div class=""reference-box"">
-                <p style=""margin: 0; font-size: 14px; color: #666;"">Your Reference Number:</p>
+                <p class=""reference-label"">YOUR REFERENCE NUMBER</p>
                 <div class=""reference-number"">{referenceNumber}</div>
-                <p style=""margin: 10px 0 0 0; font-size: 12px; color: #666;"">Present this at the airport</p>
+                <p class=""reference-note"">✓ Present this number at the airport immigration counter</p>
             </div>
 
-            <h3 style=""color: #20603D;"">At Kigali International Airport:</h3>
+            <h3 class=""section-title"">📍 At Kigali International Airport:</h3>
             <ol>
-                <li>Proceed to the Visa On Arrival counter</li>
+                <li>Proceed to the <strong>Visa On Arrival</strong> counter</li>
                 <li>Present your reference number: <strong>{referenceNumber}</strong></li>
                 <li>Show your passport and travel documents</li>
-                <li>Pay the visa fee of USD $50</li>
-                <li>Receive your visa stamp</li>
+                <li>Pay the visa fee of <strong>USD $50</strong></li>
+                <li>Receive your visa stamp and entry permit</li>
             </ol>
 
             <div class=""info-box"">
-                <h4 style=""margin-top: 0; color: #20603D;"">Please Bring:</h4>
+                <h4>📋 Required Documents at Airport:</h4>
                 <ul style=""margin: 10px 0;"">
-                    <li>Valid passport (6+ months validity)</li>
-                    <li>USD $50 for visa fee</li>
-                    <li>Return/onward ticket</li>
-                    <li>Proof of accommodation</li>
+                    <li>Valid passport (minimum 6 months validity)</li>
+                    <li>Reference number: <strong>{referenceNumber}</strong></li>
+                    <li>USD $50 cash for visa fee</li>
+                    <li>Return or onward ticket</li>
+                    <li>Proof of accommodation in Rwanda</li>
                 </ul>
             </div>
 
-            <p>Welcome to Rwanda!</p>
+            <p style=""margin-top: 30px; color: #004892; font-weight: 600; font-size: 16px;"">Welcome to Rwanda!</p>
+            <p>We look forward to welcoming you to the Land of a Thousand Hills. Enjoy your stay and experience the beauty and culture of our nation.</p>
 
-            <p style=""margin-top: 30px;"">
+            <p style=""margin-top: 30px; color: #1f2937;"">
                 <strong>Warm Regards,</strong><br>
-                Rwanda Immigration Services
+                <span style=""color: #004892; font-weight: 600;"">Rwanda Immigration Services</span><br>
+                <span style=""color: #6b7280; font-size: 14px;"">Republic of Rwanda</span>
             </p>
         </div>
         <div class=""footer"">
-            <p>This is an automated email. Please do not reply to this message.</p>
-            <p>&copy; {DateTime.Now.Year} Rwanda Immigration Services. All rights reserved.</p>
+            <p>This is an automated email from Rwanda Immigration Services. Please do not reply to this message.</p>
+            <p style=""margin-top: 10px;"">&copy; {DateTime.Now.Year} Republic of Rwanda Immigration Services. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -124,30 +134,37 @@ public class EmailService : IEmailService
 <html>
 <head>
     <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; background: #f9fafb; margin: 0; padding: 0; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #20603D 0%, #00A1DE 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-        .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
-        .success-box {{ background: #d1e7dd; border: 3px solid #0f5132; padding: 20px; margin: 20px 0; text-align: center; border-radius: 8px; }}
-        .reference-number {{ font-size: 28px; font-weight: bold; color: #20603D; letter-spacing: 3px; }}
-        .info-box {{ background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #FAD201; border-radius: 4px; }}
-        .footer {{ text-align: center; margin-top: 30px; font-size: 12px; color: #666; }}
+        .header {{ background: #10b981; color: white; padding: 40px 30px; text-align: center; }}
+        .header h1 {{ margin: 0 0 10px 0; font-size: 32px; font-weight: 700; }}
+        .header p {{ margin: 0; font-size: 16px; opacity: 0.95; }}
+        .content {{ background: white; padding: 40px 30px; }}
+        .success-box {{ background: #d1fae5; border: 3px solid #10b981; padding: 30px; margin: 25px 0; text-align: center; border-radius: 12px; }}
+        .success-box h2 {{ color: #065f46; margin-top: 0; font-size: 24px; }}
+        .success-box p {{ color: #065f46; font-size: 16px; margin: 10px 0; }}
+        .reference-number {{ font-size: 36px; font-weight: bold; color: #004892; letter-spacing: 4px; margin: 15px 0; }}
+        .info-box {{ background: #CFE3F7; padding: 20px; margin: 20px 0; border-left: 4px solid #004892; border-radius: 4px; }}
+        .info-box h4 {{ margin-top: 0; color: #004892; font-size: 16px; }}
+        .section-title {{ color: #004892; font-size: 18px; margin-top: 25px; margin-bottom: 15px; }}
+        ol, ul {{ color: #1f2937; line-height: 1.8; }}
+        .footer {{ text-align: center; margin-top: 30px; padding: 20px; background: #f9fafb; font-size: 12px; color: #6b7280; }}
     </style>
 </head>
 <body>
     <div class=""container"">
         <div class=""header"">
             <h1>✓ Visa Approved</h1>
-            <p style=""font-size: 18px; margin: 10px 0 0 0;"">Your application has been approved!</p>
+            <p>Your application has been approved!</p>
         </div>
         <div class=""content"">
             <div class=""success-box"">
-                <h2 style=""color: #0f5132; margin-top: 0;"">Congratulations, {firstName}!</h2>
-                <p style=""font-size: 16px; color: #0f5132;"">Your Visa On Arrival application has been <strong>APPROVED</strong></p>
+                <h2>🎉 Congratulations, {firstName}!</h2>
+                <p>Your Visa On Arrival application has been <strong>APPROVED</strong></p>
                 <div class=""reference-number"">{referenceNumber}</div>
             </div>
 
-            <h3 style=""color: #20603D;"">Next Steps at Kigali International Airport:</h3>
+            <h3 class=""section-title"">📍 Next Steps at Kigali International Airport:</h3>
             <ol>
                 <li>Proceed to the <strong>Visa On Arrival</strong> counter</li>
                 <li>Present your reference number: <strong>{referenceNumber}</strong></li>
@@ -157,27 +174,28 @@ public class EmailService : IEmailService
             </ol>
 
             <div class=""info-box"">
-                <h4 style=""margin-top: 0; color: #20603D;"">Required at Airport</h4>
+                <h4>📋 Required Documents at Airport:</h4>
                 <ul style=""margin: 10px 0;"">
-                    <li>Valid passport (6+ months validity)</li>
-                    <li>Reference number: {referenceNumber}</li>
-                    <li>USD $50 for visa fee</li>
-                    <li>Return/onward ticket</li>
-                    <li>Proof of accommodation</li>
+                    <li>Valid passport (minimum 6 months validity)</li>
+                    <li>Reference number: <strong>{referenceNumber}</strong></li>
+                    <li>USD $50 cash for visa fee</li>
+                    <li>Return or onward ticket</li>
+                    <li>Proof of accommodation in Rwanda</li>
                 </ul>
             </div>
 
-            <p><strong>Welcome to Rwanda - Land of a Thousand Hills!</strong></p>
-            <p>We hope you enjoy your stay and experience the beauty and culture of our nation.</p>
+            <p style=""margin-top: 30px; color: #10b981; font-weight: 600; font-size: 16px;"">🇷🇼 Welcome to Rwanda - Land of a Thousand Hills!</p>
+            <p>We look forward to welcoming you and hope you enjoy your stay. Experience the beauty, culture, and warmth of our nation.</p>
 
-            <p style=""margin-top: 30px;"">
+            <p style=""margin-top: 30px; color: #1f2937;"">
                 <strong>Safe Travels,</strong><br>
-                Rwanda Immigration Services
+                <span style=""color: #004892; font-weight: 600;"">Rwanda Immigration Services</span><br>
+                <span style=""color: #6b7280; font-size: 14px;"">Republic of Rwanda</span>
             </p>
         </div>
         <div class=""footer"">
-            <p>This is an automated email. Please do not reply to this message.</p>
-            <p>&copy; {DateTime.Now.Year} Rwanda Immigration Services. All rights reserved.</p>
+            <p>This is an automated email from Rwanda Immigration Services. Please do not reply to this message.</p>
+            <p style=""margin-top: 10px;"">&copy; {DateTime.Now.Year} Republic of Rwanda Immigration Services. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -194,73 +212,82 @@ public class EmailService : IEmailService
 <html>
 <head>
     <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; background: #f9fafb; margin: 0; padding: 0; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #20603D 0%, #00A1DE 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-        .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
-        .success-box {{ background: #d1e7dd; border: 3px solid #0f5132; padding: 20px; margin: 20px 0; text-align: center; border-radius: 8px; }}
-        .reference-number {{ font-size: 28px; font-weight: bold; color: #20603D; letter-spacing: 3px; }}
-        .info-box {{ background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #FAD201; border-radius: 4px; }}
-        .attachment-box {{ background: #e8f4f8; border: 2px solid #00A1DE; padding: 15px; margin: 15px 0; border-radius: 4px; }}
-        .footer {{ text-align: center; margin-top: 30px; font-size: 12px; color: #666; }}
+        .header {{ background: #10b981; color: white; padding: 40px 30px; text-align: center; }}
+        .header h1 {{ margin: 0 0 10px 0; font-size: 32px; font-weight: 700; }}
+        .header p {{ margin: 0; font-size: 16px; opacity: 0.95; }}
+        .content {{ background: white; padding: 40px 30px; }}
+        .success-box {{ background: #d1fae5; border: 3px solid #10b981; padding: 30px; margin: 25px 0; text-align: center; border-radius: 12px; }}
+        .success-box h2 {{ color: #065f46; margin-top: 0; font-size: 24px; }}
+        .success-box p {{ color: #065f46; font-size: 16px; margin: 10px 0; }}
+        .reference-number {{ font-size: 36px; font-weight: bold; color: #004892; letter-spacing: 4px; margin: 15px 0; }}
+        .attachment-box {{ background: #f0f9ff; border: 3px solid #004892; padding: 20px; margin: 20px 0; border-radius: 8px; }}
+        .attachment-box h4 {{ margin-top: 0; color: #004892; font-size: 16px; }}
+        .info-box {{ background: #CFE3F7; padding: 20px; margin: 20px 0; border-left: 4px solid #004892; border-radius: 4px; }}
+        .info-box h4 {{ margin-top: 0; color: #004892; font-size: 16px; }}
+        .section-title {{ color: #004892; font-size: 18px; margin-top: 25px; margin-bottom: 15px; }}
+        ol, ul {{ color: #1f2937; line-height: 1.8; }}
+        .footer {{ text-align: center; margin-top: 30px; padding: 20px; background: #f9fafb; font-size: 12px; color: #6b7280; }}
     </style>
 </head>
 <body>
     <div class=""container"">
         <div class=""header"">
             <h1>✓ Visa Approved</h1>
-            <p style=""font-size: 18px; margin: 10px 0 0 0;"">Your application has been approved!</p>
+            <p>Your application has been approved!</p>
         </div>
         <div class=""content"">
             <div class=""success-box"">
-                <h2 style=""color: #0f5132; margin-top: 0;"">Congratulations, {firstName}!</h2>
-                <p style=""font-size: 16px; color: #0f5132;"">Your Visa On Arrival application has been <strong>APPROVED</strong></p>
+                <h2>🎉 Congratulations, {firstName}!</h2>
+                <p>Your Visa On Arrival application has been <strong>APPROVED</strong></p>
                 <div class=""reference-number"">{referenceNumber}</div>
             </div>
 
             <div class=""attachment-box"">
-                <h4 style=""margin-top: 0; color: #00A1DE;"">📎 Visa Document Attached</h4>
-                <p>Your official temporary visa document is attached to this email. Please:</p>
+                <h4>📎 Visa Document Attached</h4>
+                <p style=""margin: 10px 0; color: #1f2937;"">Your official temporary visa document is attached to this email. Please:</p>
                 <ul style=""margin: 10px 0;"">
                     <li>Download and save the PDF document</li>
                     <li>Print a copy to bring to the airport</li>
-                    <li>Keep a digital copy on your phone</li>
+                    <li>Keep a digital copy on your mobile device</li>
                 </ul>
             </div>
 
-            <h3 style=""color: #20603D;"">Next Steps at Kigali International Airport:</h3>
+            <h3 class=""section-title"">📍 Next Steps at Kigali International Airport:</h3>
             <ol>
                 <li>Proceed to the <strong>Visa On Arrival</strong> counter</li>
                 <li>Present your reference number: <strong>{referenceNumber}</strong></li>
-                <li>Show your printed visa document (attached)</li>
+                <li>Show your <strong>printed visa document</strong> (attached to this email)</li>
                 <li>Show your passport and travel documents</li>
                 <li>Pay the visa fee of <strong>USD $50</strong></li>
                 <li>Receive your visa stamp and entry permit</li>
             </ol>
 
             <div class=""info-box"">
-                <h4 style=""margin-top: 0; color: #20603D;"">Required at Airport</h4>
+                <h4>📋 Required Documents at Airport:</h4>
                 <ul style=""margin: 10px 0;"">
-                    <li>Valid passport (6+ months validity)</li>
-                    <li>Printed visa document (attached to this email)</li>
-                    <li>Reference number: {referenceNumber}</li>
-                    <li>USD $50 for visa fee</li>
-                    <li>Return/onward ticket</li>
-                    <li>Proof of accommodation</li>
+                    <li>Valid passport (minimum 6 months validity)</li>
+                    <li><strong>Printed visa document</strong> (attached to this email)</li>
+                    <li>Reference number: <strong>{referenceNumber}</strong></li>
+                    <li>USD $50 cash for visa fee</li>
+                    <li>Return or onward ticket</li>
+                    <li>Proof of accommodation in Rwanda</li>
                 </ul>
             </div>
 
-            <p><strong>Welcome to Rwanda - Land of a Thousand Hills!</strong></p>
-            <p>We hope you enjoy your stay and experience the beauty and culture of our nation.</p>
+            <p style=""margin-top: 30px; color: #10b981; font-weight: 600; font-size: 16px;"">🇷🇼 Welcome to Rwanda - Land of a Thousand Hills!</p>
+            <p>We look forward to welcoming you and hope you enjoy your stay. Experience the beauty, culture, and warmth of our nation.</p>
 
-            <p style=""margin-top: 30px;"">
+            <p style=""margin-top: 30px; color: #1f2937;"">
                 <strong>Safe Travels,</strong><br>
-                Rwanda Immigration Services
+                <span style=""color: #004892; font-weight: 600;"">Rwanda Immigration Services</span><br>
+                <span style=""color: #6b7280; font-size: 14px;"">Republic of Rwanda</span>
             </p>
         </div>
         <div class=""footer"">
-            <p>This is an automated email. Please do not reply to this message.</p>
-            <p>&copy; {DateTime.Now.Year} Rwanda Immigration Services. All rights reserved.</p>
+            <p>This is an automated email from Rwanda Immigration Services. Please do not reply to this message.</p>
+            <p style=""margin-top: 10px;"">&copy; {DateTime.Now.Year} Republic of Rwanda Immigration Services. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -271,53 +298,65 @@ public class EmailService : IEmailService
 
     public async Task SendVisaRejectionEmailAsync(string toEmail, string firstName, string lastName, string referenceNumber, string reason)
     {
-        var subject = "Rwanda Visa On Arrival - Registration Status Update";
+        var subject = "Rwanda Visa On Arrival - Application Status Update";
         var htmlBody = $@"
 <!DOCTYPE html>
 <html>
 <head>
     <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; background: #f9fafb; margin: 0; padding: 0; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #00A1DE 0%, #20603D 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-        .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
-        .info-box {{ background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #FAD201; border-radius: 4px; }}
-        .footer {{ text-align: center; margin-top: 30px; font-size: 12px; color: #666; }}
+        .header {{ background: #004892; color: white; padding: 40px 30px; text-align: center; }}
+        .header h1 {{ margin: 0 0 10px 0; font-size: 28px; font-weight: 700; }}
+        .header p {{ margin: 0; font-size: 14px; opacity: 0.9; }}
+        .content {{ background: white; padding: 40px 30px; }}
+        .status-box {{ background: #fef3c7; border: 3px solid #f59e0b; padding: 25px; margin: 25px 0; border-radius: 12px; }}
+        .status-box h4 {{ margin-top: 0; color: #92400e; font-size: 16px; }}
+        .status-box p {{ color: #78350f; margin: 10px 0; }}
+        .info-box {{ background: #f0f9ff; padding: 20px; margin: 20px 0; border-left: 4px solid #004892; border-radius: 4px; }}
+        .section-title {{ color: #004892; font-size: 18px; margin-top: 25px; margin-bottom: 15px; }}
+        ol {{ color: #1f2937; line-height: 1.8; }}
+        .footer {{ text-align: center; margin-top: 30px; padding: 20px; background: #f9fafb; font-size: 12px; color: #6b7280; }}
     </style>
 </head>
 <body>
     <div class=""container"">
         <div class=""header"">
             <h1>Visa Application Status</h1>
-            <p style=""font-size: 18px; margin: 10px 0 0 0;"">Reference: {referenceNumber}</p>
+            <p>Reference: {referenceNumber}</p>
         </div>
         <div class=""content"">
-            <h2>Dear {firstName} {lastName},</h2>
-            <p>Thank you for your interest in visiting Rwanda. We have reviewed your Visa On Arrival application.</p>
+            <h2 style=""color: #004892; margin-top: 0;"">Dear {firstName} {lastName},</h2>
+            <p>Thank you for your interest in visiting Rwanda. We have carefully reviewed your Visa On Arrival application with reference number <strong>{referenceNumber}</strong>.</p>
 
-            <div class=""info-box"">
-                <h4 style=""margin-top: 0; color: #20603D;"">Application Status: Requires Review</h4>
-                <p><strong>Reason:</strong> {reason}</p>
+            <div class=""status-box"">
+                <h4>⚠️ Application Status: Requires Review</h4>
+                <p><strong>Reason for Review:</strong></p>
+                <p style=""background: white; padding: 15px; border-radius: 6px; margin-top: 10px;"">{reason}</p>
             </div>
 
-            <h3 style=""color: #20603D;"">What You Can Do:</h3>
+            <h3 class=""section-title"">📋 Next Steps:</h3>
             <ol>
-                <li>Review the reason provided above</li>
-                <li>Prepare necessary documentation or corrections</li>
-                <li>Submit a new application if applicable</li>
-                <li>Contact Rwanda Immigration for clarification</li>
+                <li>Carefully review the reason provided above</li>
+                <li>Prepare any necessary documentation or corrections</li>
+                <li>Submit a new application if required</li>
+                <li>Contact Rwanda Immigration Services for clarification if needed</li>
             </ol>
 
-            <p>If you believe this decision was made in error or need assistance, please contact the Rwanda Immigration Department.</p>
+            <div class=""info-box"">
+                <p style=""margin: 0; color: #004892;""><strong>Need Assistance?</strong></p>
+                <p style=""margin: 10px 0 0 0; color: #1f2937;"">If you believe this decision requires clarification or you need assistance with your application, please contact the Rwanda Immigration Department.</p>
+            </div>
 
-            <p style=""margin-top: 30px;"">
+            <p style=""margin-top: 30px; color: #1f2937;"">
                 <strong>Regards,</strong><br>
-                Rwanda Immigration Services
+                <span style=""color: #004892; font-weight: 600;"">Rwanda Immigration Services</span><br>
+                <span style=""color: #6b7280; font-size: 14px;"">Republic of Rwanda</span>
             </p>
         </div>
         <div class=""footer"">
-            <p>This is an automated email. Please do not reply to this message.</p>
-            <p>&copy; {DateTime.Now.Year} Rwanda Immigration Services. All rights reserved.</p>
+            <p>This is an automated email from Rwanda Immigration Services. Please do not reply to this message.</p>
+            <p style=""margin-top: 10px;"">&copy; {DateTime.Now.Year} Republic of Rwanda Immigration Services. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -487,14 +526,21 @@ public class EmailService : IEmailService
 <html>
 <head>
     <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; background: #f9fafb; margin: 0; padding: 0; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #20603D 0%, #00A1DE 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-        .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
-        .reference-box {{ background: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; margin: 20px 0; }}
-        .reference-number {{ font-size: 24px; font-weight: bold; color: #2e7d32; }}
-        .footer {{ text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px; }}
-        .check-icon {{ font-size: 48px; color: #4caf50; }}
+        .header {{ background: #10b981; color: white; padding: 40px 30px; text-align: center; }}
+        .header h1 {{ margin: 0 0 10px 0; font-size: 32px; font-weight: 700; }}
+        .header p {{ margin: 0; font-size: 16px; opacity: 0.95; }}
+        .content {{ background: white; padding: 40px 30px; }}
+        .reference-box {{ background: #d1fae5; border: 3px solid #10b981; padding: 25px; margin: 25px 0; text-align: center; border-radius: 12px; }}
+        .reference-label {{ margin: 0; font-size: 14px; color: #6b7280; font-weight: 600; }}
+        .reference-number {{ font-size: 36px; font-weight: bold; color: #004892; letter-spacing: 4px; margin: 10px 0; }}
+        .reference-note {{ margin: 10px 0 0 0; font-size: 13px; color: #6b7280; }}
+        .attachment-box {{ background: #f0f9ff; border: 3px solid #004892; padding: 20px; margin: 20px 0; border-radius: 8px; }}
+        .attachment-box h4 {{ margin-top: 0; color: #004892; font-size: 16px; }}
+        .section-title {{ color: #004892; font-size: 18px; margin-top: 25px; margin-bottom: 15px; }}
+        ol {{ color: #1f2937; line-height: 1.8; }}
+        .footer {{ text-align: center; margin-top: 30px; padding: 20px; background: #f9fafb; font-size: 12px; color: #6b7280; }}
     </style>
 </head>
 <body>
@@ -504,35 +550,46 @@ public class EmailService : IEmailService
             <p>Republic of Rwanda - Immigration Services</p>
         </div>
         <div class=""content"">
-            <p>Dear {firstName} {lastName},</p>
+            <h2 style=""color: #004892; margin-top: 0;"">Dear {firstName} {lastName},</h2>
 
-            <p>Thank you for registering for your Visa On Arrival. Your registration has been successfully received.</p>
+            <p>Thank you for registering for your Visa On Arrival to Rwanda. Your registration has been successfully received and confirmed.</p>
 
             <div class=""reference-box"">
-                <p style=""margin: 0; font-size: 14px; color: #666;"">Your Reference Number</p>
-                <p class=""reference-number"">{referenceNumber}</p>
-                <p style=""margin: 0; font-size: 12px; color: #666;"">Present this at the airport immigration counter</p>
+                <p class=""reference-label"">YOUR REFERENCE NUMBER</p>
+                <div class=""reference-number"">{referenceNumber}</div>
+                <p class=""reference-note"">✓ Present this number at the airport immigration counter</p>
             </div>
 
-            <h3>At Kigali International Airport:</h3>
+            <div class=""attachment-box"">
+                <h4>📎 Acknowledgement Document Attached</h4>
+                <p style=""margin: 10px 0; color: #1f2937;"">Your acknowledgement document is attached to this email. Please:</p>
+                <ul style=""margin: 10px 0; color: #1f2937; line-height: 1.8;"">
+                    <li>Download and save the PDF document</li>
+                    <li>Print a copy to bring to the airport</li>
+                    <li>Keep a digital copy on your mobile device</li>
+                </ul>
+            </div>
+
+            <h3 class=""section-title"">📍 At Kigali International Airport:</h3>
             <ol>
-                <li>Proceed to the Visa On Arrival counter</li>
+                <li>Proceed to the <strong>Visa On Arrival</strong> counter</li>
                 <li>Present your reference number and the attached document</li>
-                <li>Pay the visa fee of USD $50</li>
-                <li>Receive your visa stamp</li>
+                <li>Pay the visa fee of <strong>USD $50</strong></li>
+                <li>Receive your visa stamp and entry permit</li>
             </ol>
 
-            <p><strong>Your acknowledgement document is attached to this email.</strong> Please print it or save it on your mobile device to present at the airport.</p>
+            <p style=""margin-top: 30px; color: #10b981; font-weight: 600; font-size: 16px;"">🇷🇼 Welcome to Rwanda - Land of a Thousand Hills!</p>
+            <p>We look forward to welcoming you to our beautiful country.</p>
 
-            <p>Welcome to Rwanda - Land of a Thousand Hills!</p>
-
-            <p>Best regards,<br>
-            <strong>Rwanda Immigration Services</strong><br>
-            Ministry of Immigration</p>
+            <p style=""margin-top: 30px; color: #1f2937;"">
+                <strong>Best Regards,</strong><br>
+                <span style=""color: #004892; font-weight: 600;"">Rwanda Immigration Services</span><br>
+                <span style=""color: #6b7280; font-size: 14px;"">Republic of Rwanda - Ministry of Immigration</span>
+            </p>
         </div>
         <div class=""footer"">
-            <p>This is an automated message from Rwanda Immigration Services</p>
-            <p>&copy; {DateTime.UtcNow.Year} Republic of Rwanda. All rights reserved.</p>
+            <p>This is an automated email from Rwanda Immigration Services. Please do not reply to this message.</p>
+            <p style=""margin-top: 10px;"">&copy; {DateTime.UtcNow.Year} Republic of Rwanda Immigration Services. All rights reserved.</p>
         </div>
     </div>
 </body>
