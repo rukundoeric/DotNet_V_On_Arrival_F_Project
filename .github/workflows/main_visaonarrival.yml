@@ -51,5 +51,5 @@ jobs:
         with:
           app-name: 'visaonarrival'
           slot-name: 'Production'
-          package: ./backend/VisaOnArrivalApi/publish
+          package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_8F11F760BDBE4835B707D460B92B1888 }}
