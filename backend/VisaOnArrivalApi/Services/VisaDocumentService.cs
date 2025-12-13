@@ -33,7 +33,7 @@ public class VisaDocumentService : IVisaDocumentService
         var durationOfStay = (visaValidUntil - visaValidFrom).Days;
 
         // Generate QR code with verification URL
-        var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:3000";
+        var frontendUrl = _configuration["FRONTEND_URL"] ?? "https://victorious-smoke-0dc46cf03.3.azurestaticapps.net";
         var verificationUrl = $"{frontendUrl}/verify/{application.ReferenceNumber}";
         var qrCodeBytes = GenerateQRCode(verificationUrl);
 
@@ -158,7 +158,7 @@ public class VisaDocumentService : IVisaDocumentService
     public byte[] GenerateAcknowledgementDocument(VisaApplication application)
     {
         // Generate QR code with officer action URL
-        var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:3000";
+        var frontendUrl = _configuration["FRONTEND_URL"] ?? "https://victorious-smoke-0dc46cf03.3.azurestaticapps.net";
         var officerActionUrl = $"{frontendUrl}/officer/quick-action/{application.ReferenceNumber}";
         var qrCodeBytes = GenerateQRCode(officerActionUrl);
 
