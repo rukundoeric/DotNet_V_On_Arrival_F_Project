@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import VisaApplicationForm from '../components/VisaApplicationForm';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5262/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://visaonarrival-c6fec5dtfwb2hwcc.southafricanorth-01.azurewebsites.net/api';
 
 const UserDashboard = () => {
   const navigate = useNavigate();

@@ -16,7 +16,7 @@ const QuickAction = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5262/api';
+  const API_URL = process.env.REACT_APP_API_URL || 'https://visaonarrival-c6fec5dtfwb2hwcc.southafricanorth-01.azurewebsites.net/api';
 
   useEffect(() => {
     fetchApplication();
