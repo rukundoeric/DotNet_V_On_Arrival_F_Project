@@ -81,7 +81,11 @@ try
     {
         options.AddPolicy("AllowFrontend", policy =>
         {
-            policy.WithOrigins("http://localhost:3000", "http://localhost:5173")
+            policy.WithOrigins(
+                    "http://localhost:3000",
+                    "http://localhost:5173",
+                    "https://victorious-smoke-0dc46cf03.3.azurestaticapps.net"
+                  )
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
