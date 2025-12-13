@@ -1,7 +1,5 @@
 ### Visa On Arrival API Tests
 ### Base URL
-@baseUrl = https://localhost:7268/api
-@baseUrlHttp = http://localhost:5262/api
 
 ### Variables for testing
 @testFirstName = John
