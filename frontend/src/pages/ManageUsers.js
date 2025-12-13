@@ -2,12 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import './Dashboard.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://visaonarrival-c6fec5dtfwb2hwcc.southafricanorth-01.azurewebsites.net/api';
 
 const ManageUsers = () => {
   const navigate = useNavigate();
-  const { logout, token } = useAuth();
+  const { user, logout, token } = useAuth();
 
   const [users, setUsers] = useState([]);
   const [permissions, setPermissions] = useState([]);
@@ -83,16 +84,16 @@ const ManageUsers = () => {
     setShowModal(true);
   };
 
-  const handleEdit = (user) => {
-    setEditingUser(user);
+  const handleEdit = (usr) => {
+    setEditingUser(usr);
     setFormData({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      phoneNumber: user.phoneNumber || '',
-      role: user.role,
-      isActive: user.isActive,
-      permissionIds: user.permissions?.map(p => p.id) || []
+      firstName: usr.firstName,
+      lastName: usr.lastName,
+      email: usr.email,
+      phoneNumber: usr.phoneNumber || '',
+      role: usr.role,
+      isActive: usr.isActive,
+      permissionIds: usr.permissions?.map(p => p.id) || []
     });
     setShowModal(true);
   };
@@ -104,7 +105,6 @@ const ManageUsers = () => {
 
     try {
       if (editingUser) {
-        // Map role string to enum value (0=User, 1=Officer, 2=Admin)
         const roleMap = { 'User': 0, 'Officer': 1, 'Admin': 2 };
         await axios.put(
           `${API_URL}/Users/${editingUser.id}`,
@@ -120,7 +120,6 @@ const ManageUsers = () => {
         );
         setSuccess('User updated successfully');
       } else {
-        // Map role string to enum value (0=User, 1=Officer, 2=Admin)
         const roleMap = { 'User': 0, 'Officer': 1, 'Admin': 2 };
         const submitData = {
           ...formData,
@@ -165,9 +164,9 @@ const ManageUsers = () => {
     }
   };
 
-  const handleManagePermissions = (user) => {
-    setManagingPermissionsUser(user);
-    setSelectedPermissions(user.permissions?.map(p => p.id) || []);
+  const handleManagePermissions = (usr) => {
+    setManagingPermissionsUser(usr);
+    setSelectedPermissions(usr.permissions?.map(p => p.id) || []);
     setShowPermissionsModal(true);
   };
 
@@ -202,12 +201,18 @@ const ManageUsers = () => {
     navigate('/login');
   };
 
+  const getUserInitials = () => {
+    const firstName = user?.firstName || '';
+    const lastName = user?.lastName || '';
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
+
   const getRoleBadgeStyle = (role) => {
     const baseStyle = {
-      padding: '4px 8px',
-      borderRadius: '4px',
-      fontSize: '12px',
-      fontWeight: 'bold'
+      padding: '6px 14px',
+      borderRadius: '6px',
+      fontSize: '13px',
+      fontWeight: '600'
     };
 
     switch (role?.toLowerCase()) {
@@ -222,7 +227,6 @@ const ManageUsers = () => {
     }
   };
 
-  // Group permissions by category
   const groupedPermissions = permissions.reduce((acc, permission) => {
     const category = permission.category || 'Other';
     if (!acc[category]) {
@@ -233,33 +237,65 @@ const ManageUsers = () => {
   }, {});
 
   return (
-    <div className="container" style={{ marginTop: '50px' }}>
-      <div className="form-card">
-        <div className="form-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h3>Manage Users</h3>
-            <p>Create and manage system users and officers</p>
+    <div className="dashboard-container">
+      {/* Top Navigation */}
+      <nav className="dashboard-nav">
+        <div className="dashboard-nav-content">
+          <div className="dashboard-logo">
+            <h1>Rwanda Visa Portal</h1>
+            <span>Manage Users</span>
           </div>
-          <div>
-            <button onClick={() => navigate('/admin/dashboard')} className="btn-rwanda" style={{ marginRight: '10px' }}>
-              Back to Dashboard
+          <div className="dashboard-user-info">
+            <div className="user-profile">
+              <div className="user-avatar">{getUserInitials()}</div>
+              <div className="user-details">
+                <div className="user-name">{user?.firstName} {user?.lastName}</div>
+                <div className="user-role">{user?.role}</div>
+              </div>
+            </div>
+            <button onClick={() => navigate('/admin/dashboard')} className="logout-btn" style={{ marginRight: '10px' }}>
+              ← Dashboard
             </button>
-            <button onClick={handleLogout} className="btn-rwanda">
+            <button onClick={handleLogout} className="logout-btn">
               Logout
             </button>
           </div>
         </div>
+      </nav>
 
-        {error && <div className="error-alert">{error}</div>}
-        {success && <div className="success-alert">{success}</div>}
+      {/* Main Content */}
+      <main className="dashboard-main">
+        <div className="dashboard-header">
+          <h2>User Management</h2>
+          <p>Create and manage system users and officers</p>
+        </div>
 
-        <div className="form-body">
-          <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <form onSubmit={handleSearch} style={{ flex: 1, display: 'flex', gap: '10px' }}>
+        {error && (
+          <div className="error-alert" style={{ marginBottom: '20px' }}>
+            <strong>Error:</strong> {error}
+          </div>
+        )}
+        {success && (
+          <div className="success-alert" style={{ marginBottom: '20px' }}>
+            <strong>Success:</strong> {success}
+          </div>
+        )}
+
+        {/* Search and Filter */}
+        <div style={{
+          background: 'white',
+          padding: '25px',
+          borderRadius: '12px',
+          marginBottom: '25px',
+          boxShadow: '0 2px 10px rgba(0, 72, 146, 0.08)',
+          border: '1px solid #CFE3F7'
+        }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <form onSubmit={handleSearch} style={{ flex: 1, display: 'flex', gap: '12px', minWidth: '300px' }}>
               <input
                 type="text"
                 className="form-control"
-                placeholder="Search users..."
+                placeholder="🔍 Search by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{ flex: 1 }}
@@ -275,94 +311,151 @@ const ManageUsers = () => {
                 <option value="Officer">Officer</option>
                 <option value="User">User</option>
               </select>
-              <button type="submit" className="btn-rwanda">Search</button>
+              <button type="submit" className="btn-rwanda" style={{ width: 'auto', marginTop: 0 }}>
+                Search
+              </button>
             </form>
-            <button onClick={handleCreateNew} className="btn-rwanda">
-              Add New User
+            <button onClick={handleCreateNew} className="btn-rwanda" style={{ width: 'auto', marginTop: 0, backgroundColor: '#10b981' }}>
+              ➕ Add New User
             </button>
           </div>
-
-          {loading ? (
-            <p>Loading...</p>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #ddd' }}>
-                  <th style={{ padding: '12px', textAlign: 'left' }}>Name</th>
-                  <th style={{ padding: '12px', textAlign: 'left' }}>Email</th>
-                  <th style={{ padding: '12px', textAlign: 'left' }}>Phone</th>
-                  <th style={{ padding: '12px', textAlign: 'center' }}>Role</th>
-                  <th style={{ padding: '12px', textAlign: 'center' }}>Permissions</th>
-                  <th style={{ padding: '12px', textAlign: 'center' }}>Status</th>
-                  <th style={{ padding: '12px', textAlign: 'center' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users && users.length > 0 ? users.map(user => (
-                  <tr key={user.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '12px' }}>{user.firstName} {user.lastName}</td>
-                    <td style={{ padding: '12px' }}>{user.email}</td>
-                    <td style={{ padding: '12px' }}>{user.phoneNumber || '-'}</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <span style={getRoleBadgeStyle(user.role)}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '12px', color: '#666' }}>
-                        {user.permissions?.length || 0} permissions
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <span style={{
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        backgroundColor: user.isActive ? '#10b981' : '#ef4444',
-                        color: 'white',
-                        fontSize: '12px'
-                      }}>
-                        {user.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <button
-                        onClick={() => handleEdit(user)}
-                        style={{ marginRight: '5px', padding: '5px 10px', cursor: 'pointer', fontSize: '12px' }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleManagePermissions(user)}
-                        style={{ marginRight: '5px', padding: '5px 10px', cursor: 'pointer', fontSize: '12px' }}
-                      >
-                        Permissions
-                      </button>
-                      <button
-                        onClick={() => handleToggleStatus(user.id)}
-                        style={{ marginRight: '5px', padding: '5px 10px', cursor: 'pointer', fontSize: '12px' }}
-                      >
-                        {user.isActive ? 'Deactivate' : 'Activate'}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(user.id)}
-                        style={{ padding: '5px 10px', cursor: 'pointer', color: 'red', fontSize: '12px' }}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan="7" style={{ padding: '20px', textAlign: 'center' }}>
-                      No users found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          )}
+          <div style={{ marginTop: '15px', color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+            📊 {users.length} user{users.length !== 1 ? 's' : ''} found
+          </div>
         </div>
-      </div>
+
+        {/* Users Table */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          boxShadow: '0 2px 10px rgba(0, 72, 146, 0.08)',
+          border: '1px solid #CFE3F7',
+          overflow: 'hidden'
+        }}>
+          <div style={{ overflowX: 'auto' }}>
+            {loading ? (
+              <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>
+                <p>Loading users...</p>
+              </div>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #CFE3F7' }}>
+                    <th style={{ padding: '15px', textAlign: 'left', color: '#004892', fontWeight: '700', fontSize: '14px' }}>Name</th>
+                    <th style={{ padding: '15px', textAlign: 'left', color: '#004892', fontWeight: '700', fontSize: '14px' }}>Email</th>
+                    <th style={{ padding: '15px', textAlign: 'left', color: '#004892', fontWeight: '700', fontSize: '14px' }}>Phone</th>
+                    <th style={{ padding: '15px', textAlign: 'center', color: '#004892', fontWeight: '700', fontSize: '14px' }}>Role</th>
+                    <th style={{ padding: '15px', textAlign: 'center', color: '#004892', fontWeight: '700', fontSize: '14px' }}>Permissions</th>
+                    <th style={{ padding: '15px', textAlign: 'center', color: '#004892', fontWeight: '700', fontSize: '14px' }}>Status</th>
+                    <th style={{ padding: '15px', textAlign: 'center', color: '#004892', fontWeight: '700', fontSize: '14px' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users && users.length > 0 ? users.map(usr => (
+                    <tr key={usr.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      <td style={{ padding: '15px', fontWeight: '600' }}>{usr.firstName} {usr.lastName}</td>
+                      <td style={{ padding: '15px' }}>{usr.email}</td>
+                      <td style={{ padding: '15px' }}>{usr.phoneNumber || '-'}</td>
+                      <td style={{ padding: '15px', textAlign: 'center' }}>
+                        <span style={getRoleBadgeStyle(usr.role)}>
+                          {usr.role}
+                        </span>
+                      </td>
+                      <td style={{ padding: '15px', textAlign: 'center' }}>
+                        <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
+                          {usr.permissions?.length || 0} permission{usr.permissions?.length !== 1 ? 's' : ''}
+                        </span>
+                      </td>
+                      <td style={{ padding: '15px', textAlign: 'center' }}>
+                        <span style={{
+                          padding: '6px 14px',
+                          borderRadius: '6px',
+                          backgroundColor: usr.isActive ? '#10b981' : '#ef4444',
+                          color: 'white',
+                          fontSize: '13px',
+                          fontWeight: '600'
+                        }}>
+                          {usr.isActive ? '✓ Active' : '✕ Inactive'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '15px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                          <button
+                            onClick={() => handleEdit(usr)}
+                            style={{
+                              padding: '6px 12px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              backgroundColor: '#004892',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '5px',
+                              fontWeight: '600'
+                            }}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleManagePermissions(usr)}
+                            style={{
+                              padding: '6px 12px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              backgroundColor: '#3b82f6',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '5px',
+                              fontWeight: '600'
+                            }}
+                          >
+                            Permissions
+                          </button>
+                          <button
+                            onClick={() => handleToggleStatus(usr.id)}
+                            style={{
+                              padding: '6px 12px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              backgroundColor: usr.isActive ? '#fbbf24' : '#10b981',
+                              color: usr.isActive ? '#000' : 'white',
+                              border: 'none',
+                              borderRadius: '5px',
+                              fontWeight: '600'
+                            }}
+                          >
+                            {usr.isActive ? 'Deactivate' : 'Activate'}
+                          </button>
+                          <button
+                            onClick={() => handleDelete(usr.id)}
+                            style={{
+                              padding: '6px 12px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              backgroundColor: '#ef4444',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '5px',
+                              fontWeight: '600'
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan="7" style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>
+                        No users found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      </main>
 
       {/* Create/Edit User Modal */}
       {showModal && (
@@ -372,7 +465,7 @@ const ManageUsers = () => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
+          backgroundColor: 'rgba(0,0,0,0.6)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -380,16 +473,19 @@ const ManageUsers = () => {
         }}>
           <div style={{
             background: 'white',
-            padding: '30px',
-            borderRadius: '8px',
-            maxWidth: '600px',
-            width: '100%',
+            padding: '35px',
+            borderRadius: '16px',
+            maxWidth: '650px',
+            width: '90%',
             maxHeight: '90vh',
-            overflowY: 'auto'
+            overflowY: 'auto',
+            boxShadow: '0 20px 60px rgba(0, 72, 146, 0.3)'
           }}>
-            <h3>{editingUser ? 'Edit User' : 'Create New User'}</h3>
+            <h3 style={{ color: '#004892', marginBottom: '25px', fontSize: '1.5rem' }}>
+              {editingUser ? '✏️ Edit User' : '➕ Create New User'}
+            </h3>
             <form onSubmit={handleSubmit}>
-              <div className="form-row">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                 <div className="form-group">
                   <label className="form-label">First Name *</label>
                   <input
@@ -397,6 +493,7 @@ const ManageUsers = () => {
                     className="form-control"
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    placeholder="John"
                     required
                   />
                 </div>
@@ -407,6 +504,7 @@ const ManageUsers = () => {
                     className="form-control"
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    placeholder="Doe"
                     required
                   />
                 </div>
@@ -418,6 +516,7 @@ const ManageUsers = () => {
                   className="form-control"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="john.doe@example.com"
                   required
                 />
               </div>
@@ -428,6 +527,7 @@ const ManageUsers = () => {
                   className="form-control"
                   value={formData.phoneNumber}
                   onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                  placeholder="+250 XXX XXX XXX"
                 />
               </div>
               {!editingUser && (
@@ -438,6 +538,7 @@ const ManageUsers = () => {
                     className="form-control"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="Minimum 6 characters"
                     required
                   />
                 </div>
@@ -456,19 +557,20 @@ const ManageUsers = () => {
                 </select>
               </div>
               {editingUser && (
-                <div className="form-group">
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="form-group" style={{ marginTop: '15px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                     <input
                       type="checkbox"
                       checked={formData.isActive}
                       onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                     />
-                    Active
+                    <span style={{ fontWeight: '600' }}>Active</span>
                   </label>
                 </div>
               )}
-              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <button type="submit" className="btn-rwanda" style={{ flex: 1 }}>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '30px' }}>
+                <button type="submit" className="btn-rwanda" style={{ flex: 1, backgroundColor: '#10b981' }}>
                   {editingUser ? 'Update User' : 'Create User'}
                 </button>
                 <button
@@ -493,7 +595,7 @@ const ManageUsers = () => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
+          backgroundColor: 'rgba(0,0,0,0.6)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -501,34 +603,39 @@ const ManageUsers = () => {
         }}>
           <div style={{
             background: 'white',
-            padding: '30px',
-            borderRadius: '8px',
-            maxWidth: '700px',
-            width: '100%',
+            padding: '35px',
+            borderRadius: '16px',
+            maxWidth: '750px',
+            width: '90%',
             maxHeight: '90vh',
-            overflowY: 'auto'
+            overflowY: 'auto',
+            boxShadow: '0 20px 60px rgba(0, 72, 146, 0.3)'
           }}>
-            <h3>Manage Permissions for {managingPermissionsUser?.firstName} {managingPermissionsUser?.lastName}</h3>
-            <p style={{ color: '#666', marginBottom: '20px' }}>
-              Role: <strong>{managingPermissionsUser?.role}</strong>
+            <h3 style={{ color: '#004892', marginBottom: '15px', fontSize: '1.5rem' }}>
+              🔐 Manage Permissions
+            </h3>
+            <p style={{ color: '#6b7280', marginBottom: '25px', fontSize: '15px' }}>
+              User: <strong>{managingPermissionsUser?.firstName} {managingPermissionsUser?.lastName}</strong> |
+              Role: <strong style={{ color: '#004892' }}>{managingPermissionsUser?.role}</strong>
             </p>
 
             {Object.entries(groupedPermissions).map(([category, categoryPermissions]) => (
-              <div key={category} style={{ marginBottom: '20px' }}>
+              <div key={category} style={{ marginBottom: '25px' }}>
                 <h5 style={{
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  color: '#1a56db',
-                  marginBottom: '10px',
-                  textTransform: 'capitalize'
+                  fontSize: '15px',
+                  fontWeight: '700',
+                  color: '#004892',
+                  marginBottom: '12px',
+                  textTransform: 'capitalize',
+                  paddingBottom: '8px',
+                  borderBottom: '2px solid #CFE3F7'
                 }}>
                   {category}
                 </h5>
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                  gap: '10px',
-                  marginBottom: '15px'
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                  gap: '12px'
                 }}>
                   {categoryPermissions.map(permission => (
                     <label
@@ -536,22 +643,30 @@ const ManageUsers = () => {
                       style={{
                         display: 'flex',
                         alignItems: 'flex-start',
-                        gap: '8px',
+                        gap: '10px',
                         cursor: 'pointer',
-                        padding: '8px',
-                        borderRadius: '4px',
-                        backgroundColor: selectedPermissions.includes(permission.id) ? '#e0f2fe' : '#f9fafb'
+                        padding: '12px',
+                        borderRadius: '8px',
+                        backgroundColor: selectedPermissions.includes(permission.id) ? '#CFE3F7' : '#f9fafb',
+                        border: selectedPermissions.includes(permission.id) ? '2px solid #004892' : '1px solid #e5e7eb',
+                        transition: 'all 0.2s'
                       }}
                     >
                       <input
                         type="checkbox"
                         checked={selectedPermissions.includes(permission.id)}
                         onChange={() => handlePermissionToggle(permission.id)}
-                        style={{ marginTop: '3px' }}
+                        style={{ marginTop: '3px', width: '16px', height: '16px', cursor: 'pointer' }}
                       />
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: '500' }}>{permission.name}</div>
-                        <div style={{ fontSize: '11px', color: '#666' }}>{permission.description}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1f2937' }}>
+                          {permission.name}
+                        </div>
+                        {permission.description && (
+                          <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>
+                            {permission.description}
+                          </div>
+                        )}
                       </div>
                     </label>
                   ))}
@@ -559,11 +674,11 @@ const ManageUsers = () => {
               </div>
             ))}
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '30px' }}>
               <button
                 onClick={handleSavePermissions}
                 className="btn-rwanda"
-                style={{ flex: 1 }}
+                style={{ flex: 1, backgroundColor: '#10b981' }}
               >
                 Save Permissions
               </button>

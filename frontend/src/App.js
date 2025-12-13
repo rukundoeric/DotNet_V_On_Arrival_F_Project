@@ -14,6 +14,7 @@ import ManageApplications from './pages/ManageApplications';
 import ArrivalsExits from './pages/ArrivalsExits';
 import VerifyVisa from './pages/VerifyVisa';
 import QuickAction from './pages/QuickAction';
+import Reports from './pages/Reports';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -82,39 +83,76 @@ const Home = () => {
     <div className="App">
       <div className="hero-section">
         <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px', gap: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '30px', gap: '12px' }}>
             {!isAuthenticated ? (
               <>
                 <button
                   onClick={() => navigate('/login')}
                   className="btn-rwanda"
-                  style={{ backgroundColor: '#fff', color: '#1e5631', border: '2px solid #1e5631' }}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: '#fff',
+                    border: '2px solid #fff',
+                    padding: '10px 25px',
+                    width: 'auto',
+                    marginTop: 0,
+                    boxShadow: 'none'
+                  }}
                 >
                   Login
                 </button>
                 <button
                   onClick={() => navigate('/signup')}
                   className="btn-rwanda"
+                  style={{
+                    backgroundColor: '#fff',
+                    color: '#004892',
+                    border: '2px solid #fff',
+                    padding: '10px 25px',
+                    width: 'auto',
+                    marginTop: 0
+                  }}
                 >
                   Sign Up
                 </button>
               </>
             ) : (
               <>
-                <span style={{ color: '#fff', alignSelf: 'center', marginRight: '10px' }}>
+                <span style={{
+                  color: '#fff',
+                  alignSelf: 'center',
+                  marginRight: '10px',
+                  fontSize: '1.05rem',
+                  fontWeight: '500'
+                }}>
                   Welcome, {user?.firstName}!
                 </span>
                 <button
                   onClick={handleDashboard}
                   className="btn-rwanda"
-                  style={{ backgroundColor: '#fff', color: '#1e5631', border: '2px solid #1e5631' }}
+                  style={{
+                    backgroundColor: '#fff',
+                    color: '#004892',
+                    border: '2px solid #fff',
+                    padding: '10px 25px',
+                    width: 'auto',
+                    marginTop: 0
+                  }}
                 >
                   Dashboard
                 </button>
                 <button
                   onClick={handleLogout}
                   className="btn-rwanda"
-                  style={{ backgroundColor: '#d32f2f', color: '#fff', border: '2px solid #d32f2f' }}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: '#fff',
+                    border: '2px solid #fff',
+                    padding: '10px 25px',
+                    width: 'auto',
+                    marginTop: 0,
+                    boxShadow: 'none'
+                  }}
                 >
                   Logout
                 </button>
@@ -168,6 +206,22 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin/reports"
+            element={
+              <ProtectedRoute allowedRoles={['Admin']}>
+                <Reports />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/officer/reports"
+            element={
+              <ProtectedRoute allowedRoles={['Officer', 'Admin']}>
+                <Reports />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Protected Routes - Officer */}
           <Route
@@ -181,7 +235,7 @@ function App() {
           <Route
             path="/officer/applications"
             element={
-              <ProtectedRoute allowedRoles={['Officer']}>
+              <ProtectedRoute allowedRoles={['Officer', 'Admin']}>
                 <ManageApplications />
               </ProtectedRoute>
             }
@@ -189,7 +243,7 @@ function App() {
           <Route
             path="/officer/arrivals-exits"
             element={
-              <ProtectedRoute allowedRoles={['Officer']}>
+              <ProtectedRoute allowedRoles={['Officer', 'Admin']}>
                 <ArrivalsExits />
               </ProtectedRoute>
             }

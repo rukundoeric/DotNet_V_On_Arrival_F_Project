@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import AsyncSelect from 'react-select/async';
 import { useAuth } from '../contexts/AuthContext';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://visaonarrival-c6fec5dtfwb2hwcc.southafricanorth-01.azurewebsites.net/api';
 
 const VisaApplicationForm = () => {
-  const { token } = useAuth() || {};
+  const { token, user } = useAuth() || {};
 
   // Get today's date in YYYY-MM-DD format
   const getTodayDate = () => {
@@ -16,7 +17,7 @@ const VisaApplicationForm = () => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: '',
+    email: user?.email || '',
     contactNumber: '',
     dateOfBirth: '',
     passportNumber: '',
@@ -27,29 +28,52 @@ const VisaApplicationForm = () => {
     accommodationAddress: ''
   });
 
+  // Update email when user logs in
+  useEffect(() => {
+    if (user?.email && !formData.email) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email
+      }));
+    }
+  }, [user]);
+
   const [countries, setCountries] = useState([]);
-  const [loadingCountries, setLoadingCountries] = useState(true);
+  const [loadingCountries, setLoadingCountries] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState('');
   const [submitError, setSubmitError] = useState('');
 
-  // Fetch countries on component mount
-  useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/Countries?activeOnly=true`);
-        // Extract countries from paginated response
-        setCountries(response.data.data || []);
-      } catch (error) {
-        console.error('Error fetching countries:', error);
-      } finally {
-        setLoadingCountries(false);
+  // Fetch countries with search query
+  const fetchCountries = async (searchQuery = '') => {
+    setLoadingCountries(true);
+    try {
+      const params = {
+        activeOnly: true,
+        pageSize: searchQuery ? 50 : 20
+      };
+      if (searchQuery) {
+        params.search = searchQuery;
       }
-    };
+      const response = await axios.get(`${API_URL}/Countries`, { params });
+      // Extract countries from paginated response
+      return (response.data.data || []).map(country => ({
+        value: country.name,
+        label: country.name
+      }));
+    } catch (error) {
+      console.error('Error fetching countries:', error);
+      return [];
+    } finally {
+      setLoadingCountries(false);
+    }
+  };
 
-    fetchCountries();
+  // Load initial countries
+  useEffect(() => {
+    fetchCountries().then(setCountries);
   }, []);
 
   const handleChange = (e) => {
@@ -77,7 +101,11 @@ const VisaApplicationForm = () => {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-    if (!formData.contactNumber.trim()) newErrors.contactNumber = 'Contact number is required';
+    if (!formData.contactNumber.trim()) {
+      newErrors.contactNumber = 'Contact number is required';
+    } else if (!/^\d{12}$/.test(formData.contactNumber.replace(/\s/g, ''))) {
+      newErrors.contactNumber = 'Contact number must be exactly 12 digits';
+    }
     if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
     if (!formData.passportNumber.trim()) newErrors.passportNumber = 'Passport number is required';
     if (!formData.nationality.trim()) newErrors.nationality = 'Nationality is required';
@@ -295,8 +323,11 @@ const VisaApplicationForm = () => {
                   className={`form-control ${errors.contactNumber ? 'error' : ''}`}
                   value={formData.contactNumber}
                   onChange={handleChange}
+                  placeholder="Enter 12-digit phone number"
+                  maxLength="12"
                 />
                 {errors.contactNumber && <span className="error-message">{errors.contactNumber}</span>}
+                <small style={{ color: '#6b7280', fontSize: '0.85rem' }}>Must be 12 numeric digits</small>
               </div>
             </div>
 
@@ -327,23 +358,57 @@ const VisaApplicationForm = () => {
               </div>
               <div className="form-group">
                 <label className="form-label">Nationality *</label>
-                <select
+                <AsyncSelect
                   name="nationality"
-                  className={`form-control ${errors.nationality ? 'error' : ''}`}
-                  value={formData.nationality}
-                  onChange={handleChange}
-                  disabled={loadingCountries}
-                >
-                  <option value="">
-                    {loadingCountries ? 'Loading countries...' : 'Select your nationality'}
-                  </option>
-                  {countries.map(country => (
-                    <option key={country.id} value={country.name}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
+                  cacheOptions
+                  defaultOptions={countries}
+                  loadOptions={fetchCountries}
+                  value={formData.nationality ? { value: formData.nationality, label: formData.nationality } : null}
+                  onChange={(selectedOption) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      nationality: selectedOption ? selectedOption.value : ''
+                    }));
+                    if (errors.nationality) {
+                      setErrors(prev => ({
+                        ...prev,
+                        nationality: ''
+                      }));
+                    }
+                  }}
+                  placeholder="Type to search for your nationality..."
+                  isClearable
+                  noOptionsMessage={({ inputValue }) =>
+                    inputValue ? `No countries found matching "${inputValue}"` : 'Start typing to search countries'
+                  }
+                  loadingMessage={() => 'Searching countries...'}
+                  styles={{
+                    control: (base, state) => ({
+                      ...base,
+                      borderColor: errors.nationality ? '#ef4444' : (state.isFocused ? '#004892' : '#CFE3F7'),
+                      borderWidth: '2px',
+                      boxShadow: state.isFocused ? '0 0 0 1px #004892' : 'none',
+                      '&:hover': {
+                        borderColor: '#004892'
+                      },
+                      minHeight: '48px',
+                      fontSize: '1rem'
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isSelected ? '#004892' : state.isFocused ? '#CFE3F7' : 'white',
+                      color: state.isSelected ? 'white' : '#333',
+                      cursor: 'pointer',
+                      padding: '10px 12px'
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      zIndex: 9999
+                    })
+                  }}
+                />
                 {errors.nationality && <span className="error-message">{errors.nationality}</span>}
+                <small style={{ color: '#6b7280', fontSize: '0.85rem' }}>Type to search from all available countries</small>
               </div>
             </div>
 

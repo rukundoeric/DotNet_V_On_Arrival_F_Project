@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import VisaApplicationForm from '../components/VisaApplicationForm';
+import './Dashboard.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://visaonarrival-c6fec5dtfwb2hwcc.southafricanorth-01.azurewebsites.net/api';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
   const { user, logout, token } = useAuth();
-  const [activeView, setActiveView] = useState('dashboard');
+  const [activeView, setActiveView] = useState('home');
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,154 +39,204 @@ const UserDashboard = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
+  };
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    const firstName = user?.firstName || '';
+    const lastName = user?.lastName || '';
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
   const getStatusBadgeStyle = (status) => {
     const baseStyle = {
-      padding: '4px 12px',
-      borderRadius: '4px',
-      fontSize: '12px',
-      fontWeight: 'bold'
+      padding: '6px 14px',
+      borderRadius: '6px',
+      fontSize: '13px',
+      fontWeight: '600'
     };
 
     switch (status?.toLowerCase()) {
       case 'pending':
-        return { ...baseStyle, backgroundColor: '#fbbf24', color: '#000' };
+        return { ...baseStyle, backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #fbbf24' };
       case 'approved':
-        return { ...baseStyle, backgroundColor: '#10b981', color: '#fff' };
+        return { ...baseStyle, backgroundColor: '#d1fae5', color: '#065f46', border: '1px solid #10b981' };
       case 'rejected':
-        return { ...baseStyle, backgroundColor: '#ef4444', color: '#fff' };
+        return { ...baseStyle, backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #ef4444' };
       default:
-        return { ...baseStyle, backgroundColor: '#6b7280', color: '#fff' };
+        return { ...baseStyle, backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #9ca3af' };
     }
   };
 
-  const renderDashboard = () => (
-    <div className="form-body">
-      <div className="info-card">
-        <h5>Your Information</h5>
-        <p><strong>Email:</strong> {user?.email}</p>
-        <p><strong>Account Type:</strong> Standard User</p>
-      </div>
-
-      <div className="benefits-section" style={{ marginTop: '30px' }}>
-        <h5>Quick Actions</h5>
-        <div className="benefit-item" onClick={() => setActiveView('applications')} style={{ cursor: 'pointer' }}>
-          <span className="benefit-icon">📝</span>
-          <div>
-            <strong>My Applications</strong><br />
-            <small>View all your visa applications</small>
+  // Render Home View (Submit New Application)
+  const renderHome = () => (
+    <div className="dashboard-container">
+      <nav className="dashboard-nav">
+        <div className="dashboard-nav-content">
+          <div className="dashboard-logo">
+            <h1>Rwanda Visa Portal</h1>
+            <span>Apply for Visa on Arrival</span>
+          </div>
+          <div className="dashboard-user-info">
+            <div className="user-profile">
+              <div className="user-avatar">{getUserInitials()}</div>
+              <div className="user-details">
+                <div className="user-name">{user?.firstName} {user?.lastName}</div>
+                <div className="user-role">{user?.email}</div>
+              </div>
+            </div>
+            <button onClick={() => setActiveView('applications')} className="logout-btn" style={{ marginRight: '10px' }}>
+              My Applications
+            </button>
+            <button onClick={handleLogout} className="logout-btn">
+              Logout
+            </button>
           </div>
         </div>
-        <div className="benefit-item" onClick={() => setActiveView('new')} style={{ cursor: 'pointer' }}>
-          <span className="benefit-icon">➕</span>
-          <div>
-            <strong>New Application</strong><br />
-            <small>Submit a new visa application</small>
-          </div>
-        </div>
-      </div>
+      </nav>
 
-      <button className="btn-rwanda" onClick={handleLogout} style={{ marginTop: '30px' }}>
-        Logout
-      </button>
+      <main className="dashboard-main">
+        <div className="dashboard-header">
+          <h2>Welcome to Rwanda</h2>
+          <p>Land of a Thousand Hills - Apply for your Visa on Arrival</p>
+        </div>
+
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '30px',
+          boxShadow: '0 2px 10px rgba(0, 72, 146, 0.08)',
+          border: '1px solid #CFE3F7'
+        }}>
+          <VisaApplicationForm />
+        </div>
+      </main>
     </div>
   );
 
+  // Render My Applications View
   const renderMyApplications = () => (
-    <div className="form-body">
-      <button
-        className="btn-rwanda"
-        onClick={() => setActiveView('dashboard')}
-        style={{ marginBottom: '20px', backgroundColor: '#6b7280' }}
-      >
-        ← Back to Dashboard
-      </button>
-
-      {error && <div className="error-alert">{error}</div>}
-
-      {loading ? (
-        <p>Loading applications...</p>
-      ) : applications.length === 0 ? (
-        <div className="info-card">
-          <p>You haven't submitted any applications yet.</p>
-          <button className="btn-rwanda" onClick={() => setActiveView('new')} style={{ marginTop: '10px' }}>
-            Submit Your First Application
-          </button>
+    <div className="dashboard-container">
+      <nav className="dashboard-nav">
+        <div className="dashboard-nav-content">
+          <div className="dashboard-logo">
+            <h1>Rwanda Visa Portal</h1>
+            <span>My Applications</span>
+          </div>
+          <div className="dashboard-user-info">
+            <div className="user-profile">
+              <div className="user-avatar">{getUserInitials()}</div>
+              <div className="user-details">
+                <div className="user-name">{user?.firstName} {user?.lastName}</div>
+                <div className="user-role">{user?.email}</div>
+              </div>
+            </div>
+            <button onClick={() => setActiveView('home')} className="logout-btn" style={{ marginRight: '10px' }}>
+              ← New Application
+            </button>
+            <button onClick={handleLogout} className="logout-btn">
+              Logout
+            </button>
+          </div>
         </div>
-      ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ borderBottom: '2px solid #ddd' }}>
-              <th style={{ padding: '12px', textAlign: 'left' }}>Reference</th>
-              <th style={{ padding: '12px', textAlign: 'left' }}>Name</th>
-              <th style={{ padding: '12px', textAlign: 'left' }}>Passport</th>
-              <th style={{ padding: '12px', textAlign: 'left' }}>Arrival Date</th>
-              <th style={{ padding: '12px', textAlign: 'center' }}>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {applications.map(app => (
-              <tr key={app.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: '12px' }}>{app.referenceNumber}</td>
-                <td style={{ padding: '12px' }}>{app.firstName} {app.lastName}</td>
-                <td style={{ padding: '12px' }}>{app.passportNumber}</td>
-                <td style={{ padding: '12px' }}>
-                  {new Date(app.arrivalDate).toLocaleDateString()}
-                </td>
-                <td style={{ padding: '12px', textAlign: 'center' }}>
-                  <span style={getStatusBadgeStyle(app.applicationStatus)}>
-                    {app.applicationStatus}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  );
+      </nav>
 
-  const renderNewApplication = () => (
-    <div className="form-body">
-      <button
-        className="btn-rwanda"
-        onClick={() => setActiveView('dashboard')}
-        style={{ marginBottom: '20px', backgroundColor: '#6b7280' }}
-      >
-        ← Back to Dashboard
-      </button>
-      <VisaApplicationForm />
+      <main className="dashboard-main">
+        <div className="dashboard-header">
+          <h2>My Applications</h2>
+          <p>Track your visa application status</p>
+        </div>
+
+        {error && (
+          <div className="error-alert" style={{ marginBottom: '20px' }}>
+            <strong>Error:</strong> {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>
+            <p>Loading applications...</p>
+          </div>
+        ) : applications.length === 0 ? (
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '40px',
+            textAlign: 'center',
+            boxShadow: '0 2px 10px rgba(0, 72, 146, 0.08)',
+            border: '1px solid #CFE3F7'
+          }}>
+            <div style={{ fontSize: '3rem', marginBottom: '15px' }}>📋</div>
+            <h3 style={{ color: '#004892', marginBottom: '10px' }}>No Applications Found</h3>
+            <p style={{ color: '#6b7280', marginBottom: '20px' }}>You haven't submitted any visa applications yet.</p>
+            <button className="btn-rwanda" onClick={() => setActiveView('home')} style={{ width: 'auto', marginTop: 0 }}>
+              Submit Your First Application
+            </button>
+          </div>
+        ) : (
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 2px 10px rgba(0, 72, 146, 0.08)',
+            border: '1px solid #CFE3F7',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              padding: '20px 25px',
+              borderBottom: '2px solid #CFE3F7',
+              backgroundColor: '#f8f9fa'
+            }}>
+              <h3 style={{ color: '#004892', margin: 0, fontSize: '1.3rem' }}>Application History</h3>
+              <p style={{ color: '#6b7280', margin: '5px 0 0 0', fontSize: '0.95rem' }}>
+                Total Applications: <strong>{applications.length}</strong>
+              </p>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #CFE3F7' }}>
+                    <th style={{ padding: '15px', textAlign: 'left', color: '#004892', fontWeight: '700' }}>Reference</th>
+                    <th style={{ padding: '15px', textAlign: 'left', color: '#004892', fontWeight: '700' }}>Name</th>
+                    <th style={{ padding: '15px', textAlign: 'left', color: '#004892', fontWeight: '700' }}>Passport</th>
+                    <th style={{ padding: '15px', textAlign: 'left', color: '#004892', fontWeight: '700' }}>Arrival Date</th>
+                    <th style={{ padding: '15px', textAlign: 'center', color: '#004892', fontWeight: '700' }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {applications.map(app => (
+                    <tr key={app.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      <td style={{ padding: '15px', fontWeight: '600', color: '#004892' }}>{app.referenceNumber}</td>
+                      <td style={{ padding: '15px' }}>{app.firstName} {app.lastName}</td>
+                      <td style={{ padding: '15px', fontFamily: 'monospace' }}>{app.passportNumber}</td>
+                      <td style={{ padding: '15px' }}>
+                        {new Date(app.arrivalDate).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </td>
+                      <td style={{ padding: '15px', textAlign: 'center' }}>
+                        <span style={getStatusBadgeStyle(app.applicationStatus)}>
+                          {app.applicationStatus}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 
   return (
-    <div className="container" style={{ marginTop: '50px' }}>
-      <div className="form-card">
-        <div className="form-header">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h3>
-                {activeView === 'dashboard' && 'My Dashboard'}
-                {activeView === 'applications' && 'My Applications'}
-                {activeView === 'new' && 'New Application'}
-              </h3>
-              {activeView === 'dashboard' && <p>Welcome, {user?.firstName} {user?.lastName}!</p>}
-            </div>
-            {activeView !== 'dashboard' && (
-              <button className="btn-rwanda" onClick={handleLogout}>
-                Logout
-              </button>
-            )}
-          </div>
-        </div>
-
-        {activeView === 'dashboard' && renderDashboard()}
-        {activeView === 'applications' && renderMyApplications()}
-        {activeView === 'new' && renderNewApplication()}
-      </div>
-    </div>
+    <>
+      {activeView === 'home' && renderHome()}
+      {activeView === 'applications' && renderMyApplications()}
+    </>
   );
 };
 

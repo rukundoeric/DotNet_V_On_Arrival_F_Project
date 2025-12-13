@@ -2,12 +2,13 @@ import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import './Dashboard.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://visaonarrival-c6fec5dtfwb2hwcc.southafricanorth-01.azurewebsites.net/api';
 
 const ArrivalsExits = () => {
   const navigate = useNavigate();
-  const { logout, token } = useAuth();
+  const { user, logout, token } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResult, setSearchResult] = useState(null);
@@ -16,7 +17,7 @@ const ArrivalsExits = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [activeTab, setActiveTab] = useState('search'); // 'search' or 'records'
+  const [activeTab, setActiveTab] = useState('search');
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
@@ -30,7 +31,6 @@ const ArrivalsExits = () => {
     setSearchResult(null);
 
     try {
-      // Search for approved applications
       const response = await axios.get(`${API_URL}/VisaApplications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -78,7 +78,6 @@ const ArrivalsExits = () => {
       setLoading(true);
       setError('');
 
-      // Check if arrival record already exists
       const existingRecordsResponse = await axios.get(`${API_URL}/ArrivalRecords`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -93,24 +92,22 @@ const ArrivalsExits = () => {
       }
 
       if (existingRecord) {
-        // Update existing record with arrival date
         await axios.put(
           `${API_URL}/ArrivalRecords/${existingRecord.id}`,
           {
             actualArrivalDate: new Date().toISOString(),
             actualDepartureDate: null,
-            entryStatus: 1 // Arrived
+            entryStatus: 1
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
       } else {
-        // Create new arrival record
         await axios.post(
           `${API_URL}/ArrivalRecords`,
           {
             visaApplicationId: searchResult.id,
             actualArrivalDate: new Date().toISOString(),
-            entryStatus: 1 // Arrived
+            entryStatus: 1
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -139,7 +136,7 @@ const ArrivalsExits = () => {
         {
           actualArrivalDate: record.actualArrivalDate,
           actualDepartureDate: new Date().toISOString(),
-          entryStatus: 2 // Departed
+          entryStatus: 2
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -161,7 +158,6 @@ const ArrivalsExits = () => {
         }
       );
 
-      // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -182,22 +178,28 @@ const ArrivalsExits = () => {
     navigate('/login');
   };
 
+  const getUserInitials = () => {
+    const firstName = user?.firstName || '';
+    const lastName = user?.lastName || '';
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
+
   const getStatusBadgeStyle = (status) => {
     const baseStyle = {
-      padding: '4px 12px',
-      borderRadius: '4px',
-      fontSize: '12px',
-      fontWeight: 'bold'
+      padding: '6px 14px',
+      borderRadius: '6px',
+      fontSize: '13px',
+      fontWeight: '600'
     };
 
     switch (status) {
-      case 0: // Pending
+      case 0:
       case 'Pending':
         return { ...baseStyle, backgroundColor: '#fbbf24', color: '#000' };
-      case 1: // Arrived
+      case 1:
       case 'Arrived':
         return { ...baseStyle, backgroundColor: '#10b981', color: '#fff' };
-      case 2: // Departed
+      case 2:
       case 'Departed':
         return { ...baseStyle, backgroundColor: '#6b7280', color: '#fff' };
       default:
@@ -220,66 +222,124 @@ const ArrivalsExits = () => {
     }
   }, [activeTab, fetchArrivalRecords]);
 
+  const filteredRecords = arrivalRecords.filter(record => {
+    if (!recordsSearchTerm.trim()) return true;
+    const searchLower = recordsSearchTerm.toLowerCase();
+    return (
+      record.visaApplication?.referenceNumber?.toLowerCase().includes(searchLower) ||
+      record.visaApplication?.firstName?.toLowerCase().includes(searchLower) ||
+      record.visaApplication?.lastName?.toLowerCase().includes(searchLower) ||
+      record.visaApplication?.passportNumber?.toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
-    <div className="container" style={{ marginTop: '50px' }}>
-      <div className="form-card">
-        <div className="form-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h3>Arrivals & Exits Management</h3>
-            <p>Record traveler arrivals and departures</p>
+    <div className="dashboard-container">
+      {/* Top Navigation */}
+      <nav className="dashboard-nav">
+        <div className="dashboard-nav-content">
+          <div className="dashboard-logo">
+            <h1>Rwanda Visa Portal</h1>
+            <span>Arrivals & Exits</span>
           </div>
-          <div>
-            <button onClick={() => navigate('/officer/dashboard')} className="btn-rwanda" style={{ marginRight: '10px' }}>
-              Back to Dashboard
+          <div className="dashboard-user-info">
+            <div className="user-profile">
+              <div className="user-avatar">{getUserInitials()}</div>
+              <div className="user-details">
+                <div className="user-name">{user?.firstName} {user?.lastName}</div>
+                <div className="user-role">{user?.role}</div>
+              </div>
+            </div>
+            <button onClick={() => navigate('/officer/dashboard')} className="logout-btn" style={{ marginRight: '10px' }}>
+              ← Dashboard
             </button>
-            <button onClick={handleLogout} className="btn-rwanda">
+            <button onClick={handleLogout} className="logout-btn">
               Logout
             </button>
           </div>
         </div>
+      </nav>
 
-        {error && <div className="error-alert">{error}</div>}
-        {success && <div className="success-alert">{success}</div>}
+      {/* Main Content */}
+      <main className="dashboard-main">
+        <div className="dashboard-header">
+          <h2>Arrivals & Exits Management</h2>
+          <p>Record traveler arrivals and departures</p>
+        </div>
 
-        <div className="form-body">
-          {/* Tab Navigation */}
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '2px solid #ddd' }}>
-            <button
-              onClick={() => setActiveTab('search')}
-              style={{
-                padding: '10px 20px',
-                border: 'none',
-                background: 'none',
-                borderBottom: activeTab === 'search' ? '3px solid #1a56db' : 'none',
-                fontWeight: activeTab === 'search' ? 'bold' : 'normal',
-                cursor: 'pointer',
-                color: activeTab === 'search' ? '#1a56db' : '#666'
-              }}
-            >
-              Record Arrival
-            </button>
-            <button
-              onClick={() => setActiveTab('records')}
-              style={{
-                padding: '10px 20px',
-                border: 'none',
-                background: 'none',
-                borderBottom: activeTab === 'records' ? '3px solid #1a56db' : 'none',
-                fontWeight: activeTab === 'records' ? 'bold' : 'normal',
-                cursor: 'pointer',
-                color: activeTab === 'records' ? '#1a56db' : '#666'
-              }}
-            >
-              All Records
-            </button>
+        {error && (
+          <div className="error-alert" style={{ marginBottom: '20px' }}>
+            <strong>Error:</strong> {error}
           </div>
+        )}
+        {success && (
+          <div className="success-alert" style={{ marginBottom: '20px' }}>
+            <strong>Success:</strong> {success}
+          </div>
+        )}
 
+        {/* Tab Navigation */}
+        <div style={{
+          display: 'flex',
+          gap: '10px',
+          marginBottom: '25px',
+          background: 'white',
+          padding: '10px 25px',
+          borderRadius: '12px 12px 0 0',
+          boxShadow: '0 2px 10px rgba(0, 72, 146, 0.08)',
+          border: '1px solid #CFE3F7',
+          borderBottom: 'none'
+        }}>
+          <button
+            onClick={() => setActiveTab('search')}
+            style={{
+              padding: '12px 25px',
+              border: 'none',
+              background: activeTab === 'search' ? '#004892' : 'transparent',
+              color: activeTab === 'search' ? 'white' : '#6b7280',
+              borderRadius: '8px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              fontSize: '15px'
+            }}
+          >
+            📝 Record Arrival
+          </button>
+          <button
+            onClick={() => setActiveTab('records')}
+            style={{
+              padding: '12px 25px',
+              border: 'none',
+              background: activeTab === 'records' ? '#004892' : 'transparent',
+              color: activeTab === 'records' ? 'white' : '#6b7280',
+              borderRadius: '8px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              fontSize: '15px'
+            }}
+          >
+            📋 All Records
+          </button>
+        </div>
+
+        {/* Tab Content Container */}
+        <div style={{
+          background: 'white',
+          padding: '30px',
+          borderRadius: '0 12px 12px 12px',
+          boxShadow: '0 2px 10px rgba(0, 72, 146, 0.08)',
+          border: '1px solid #CFE3F7'
+        }}>
           {/* Search Tab */}
           {activeTab === 'search' && (
             <div>
-              <div style={{ marginBottom: '20px' }}>
-                <label className="form-label">Search by Reference Number or Passport Number</label>
-                <div style={{ display: 'flex', gap: '10px' }}>
+              <div style={{ marginBottom: '25px' }}>
+                <label className="form-label" style={{ fontSize: '16px', marginBottom: '12px', display: 'block' }}>
+                  Search by Reference Number or Passport Number
+                </label>
+                <div style={{ display: 'flex', gap: '12px' }}>
                   <input
                     type="text"
                     className="form-control"
@@ -293,16 +353,17 @@ const ArrivalsExits = () => {
                     onClick={handleSearch}
                     className="btn-rwanda"
                     disabled={loading}
+                    style={{ width: 'auto', marginTop: 0 }}
                   >
-                    {loading ? 'Searching...' : 'Search'}
+                    {loading ? 'Searching...' : '🔍 Search'}
                   </button>
                 </div>
               </div>
 
               {searchResult && (
-                <div className="info-card" style={{ marginTop: '20px' }}>
-                  <h5 style={{ color: '#1a56db', marginBottom: '15px' }}>Application Found</h5>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div className="info-card" style={{ marginTop: '25px', border: '2px solid #10b981' }}>
+                  <h5 style={{ color: '#10b981', marginBottom: '20px', fontSize: '1.2rem' }}>✓ Application Found</h5>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginBottom: '20px' }}>
                     <p><strong>Reference:</strong> {searchResult.referenceNumber}</p>
                     <p><strong>Name:</strong> {searchResult.firstName} {searchResult.lastName}</p>
                     <p><strong>Passport:</strong> {searchResult.passportNumber}</p>
@@ -313,10 +374,10 @@ const ArrivalsExits = () => {
                   <button
                     onClick={handleRecordArrival}
                     className="btn-rwanda"
-                    style={{ marginTop: '15px', width: '100%' }}
+                    style={{ width: '100%', backgroundColor: '#10b981' }}
                     disabled={loading}
                   >
-                    {loading ? 'Recording...' : 'Record Arrival Now'}
+                    {loading ? 'Recording...' : '✓ Record Arrival Now'}
                   </button>
                 </div>
               )}
@@ -326,11 +387,11 @@ const ArrivalsExits = () => {
           {/* Records Tab */}
           {activeTab === 'records' && (
             <div>
-              <div style={{ marginBottom: '20px' }}>
+              <div style={{ marginBottom: '25px' }}>
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Search by reference number, name, or passport number..."
+                  placeholder="🔍 Search by reference number, name, or passport number..."
                   value={recordsSearchTerm}
                   onChange={(e) => setRecordsSearchTerm(e.target.value)}
                   style={{ width: '100%' }}
@@ -338,135 +399,115 @@ const ArrivalsExits = () => {
               </div>
 
               {loading ? (
-                <p>Loading records...</p>
-              ) : arrivalRecords.filter(record => {
-                if (!recordsSearchTerm.trim()) return true;
-                const searchLower = recordsSearchTerm.toLowerCase();
-                return (
-                  record.visaApplication?.referenceNumber?.toLowerCase().includes(searchLower) ||
-                  record.visaApplication?.firstName?.toLowerCase().includes(searchLower) ||
-                  record.visaApplication?.lastName?.toLowerCase().includes(searchLower) ||
-                  record.visaApplication?.passportNumber?.toLowerCase().includes(searchLower)
-                );
-              }).length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>
+                  <p>Loading records...</p>
+                </div>
+              ) : filteredRecords.length === 0 ? (
                 <div className="info-card">
                   <p>No arrival records found</p>
                 </div>
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid #ddd' }}>
-                      <th style={{ padding: '12px', textAlign: 'left' }}>Reference</th>
-                      <th style={{ padding: '12px', textAlign: 'left' }}>Name</th>
-                      <th style={{ padding: '12px', textAlign: 'left' }}>Passport</th>
-                      <th style={{ padding: '12px', textAlign: 'left' }}>Arrival Date</th>
-                      <th style={{ padding: '12px', textAlign: 'left' }}>Departure Date</th>
-                      <th style={{ padding: '12px', textAlign: 'center' }}>Status</th>
-                      <th style={{ padding: '12px', textAlign: 'center' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {arrivalRecords.filter(record => {
-                      if (!recordsSearchTerm.trim()) return true;
-                      const searchLower = recordsSearchTerm.toLowerCase();
-                      return (
-                        record.visaApplication?.referenceNumber?.toLowerCase().includes(searchLower) ||
-                        record.visaApplication?.firstName?.toLowerCase().includes(searchLower) ||
-                        record.visaApplication?.lastName?.toLowerCase().includes(searchLower) ||
-                        record.visaApplication?.passportNumber?.toLowerCase().includes(searchLower)
-                      );
-                    }).map(record => (
-                      <tr key={record.id} style={{ borderBottom: '1px solid #eee' }}>
-                        <td style={{ padding: '12px' }}>
-                          {record.visaApplication?.referenceNumber || 'N/A'}
-                        </td>
-                        <td style={{ padding: '12px' }}>
-                          {record.visaApplication?.firstName && record.visaApplication?.lastName
-                            ? `${record.visaApplication.firstName} ${record.visaApplication.lastName}`
-                            : 'N/A'
-                          }
-                        </td>
-                        <td style={{ padding: '12px' }}>
-                          {record.visaApplication?.passportNumber || 'N/A'}
-                        </td>
-                        <td style={{ padding: '12px' }}>
-                          {record.actualArrivalDate
-                            ? new Date(record.actualArrivalDate).toLocaleString()
-                            : 'Not recorded'
-                          }
-                        </td>
-                        <td style={{ padding: '12px' }}>
-                          {record.actualDepartureDate
-                            ? new Date(record.actualDepartureDate).toLocaleString()
-                            : 'Not recorded'
-                          }
-                        </td>
-                        <td style={{ padding: '12px', textAlign: 'center' }}>
-                          <span style={getStatusBadgeStyle(record.entryStatus)}>
-                            {getStatusText(record.entryStatus)}
-                          </span>
-                        </td>
-                        <td style={{ padding: '12px', textAlign: 'center' }}>
-                          <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                            {record.entryStatus === 1 && !record.actualDepartureDate && (
-                              <button
-                                onClick={() => handleRecordDeparture(record.id)}
-                                style={{
-                                  padding: '5px 10px',
-                                  cursor: 'pointer',
-                                  fontSize: '12px',
-                                  backgroundColor: '#1a56db',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '4px'
-                                }}
-                              >
-                                Record Departure
-                              </button>
-                            )}
-                            {record.visaApplication?.id && (
-                              <button
-                                onClick={() => handleDownloadVisa(record.visaApplication.id, record.visaApplication.referenceNumber)}
-                                style={{
-                                  padding: '5px 10px',
-                                  cursor: 'pointer',
-                                  fontSize: '12px',
-                                  backgroundColor: '#20603D',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '4px'
-                                }}
-                                title="Download Visa Document"
-                              >
-                                📄 Download Visa
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                <>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #CFE3F7' }}>
+                          <th style={{ padding: '15px', textAlign: 'left', color: '#004892', fontWeight: '700', fontSize: '14px' }}>Reference</th>
+                          <th style={{ padding: '15px', textAlign: 'left', color: '#004892', fontWeight: '700', fontSize: '14px' }}>Name</th>
+                          <th style={{ padding: '15px', textAlign: 'left', color: '#004892', fontWeight: '700', fontSize: '14px' }}>Passport</th>
+                          <th style={{ padding: '15px', textAlign: 'left', color: '#004892', fontWeight: '700', fontSize: '14px' }}>Arrival Date</th>
+                          <th style={{ padding: '15px', textAlign: 'left', color: '#004892', fontWeight: '700', fontSize: '14px' }}>Departure Date</th>
+                          <th style={{ padding: '15px', textAlign: 'center', color: '#004892', fontWeight: '700', fontSize: '14px' }}>Status</th>
+                          <th style={{ padding: '15px', textAlign: 'center', color: '#004892', fontWeight: '700', fontSize: '14px' }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredRecords.map(record => (
+                          <tr key={record.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                            <td style={{ padding: '15px', fontWeight: '600', color: '#004892' }}>
+                              {record.visaApplication?.referenceNumber || 'N/A'}
+                            </td>
+                            <td style={{ padding: '15px' }}>
+                              {record.visaApplication?.firstName && record.visaApplication?.lastName
+                                ? `${record.visaApplication.firstName} ${record.visaApplication.lastName}`
+                                : 'N/A'
+                              }
+                            </td>
+                            <td style={{ padding: '15px' }}>
+                              {record.visaApplication?.passportNumber || 'N/A'}
+                            </td>
+                            <td style={{ padding: '15px' }}>
+                              {record.actualArrivalDate
+                                ? new Date(record.actualArrivalDate).toLocaleString()
+                                : 'Not recorded'
+                              }
+                            </td>
+                            <td style={{ padding: '15px' }}>
+                              {record.actualDepartureDate
+                                ? new Date(record.actualDepartureDate).toLocaleString()
+                                : 'Not recorded'
+                              }
+                            </td>
+                            <td style={{ padding: '15px', textAlign: 'center' }}>
+                              <span style={getStatusBadgeStyle(record.entryStatus)}>
+                                {getStatusText(record.entryStatus)}
+                              </span>
+                            </td>
+                            <td style={{ padding: '15px', textAlign: 'center' }}>
+                              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                {record.entryStatus === 1 && !record.actualDepartureDate && (
+                                  <button
+                                    onClick={() => handleRecordDeparture(record.id)}
+                                    style={{
+                                      padding: '8px 16px',
+                                      cursor: 'pointer',
+                                      fontSize: '13px',
+                                      backgroundColor: '#004892',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '6px',
+                                      fontWeight: '600'
+                                    }}
+                                  >
+                                    Record Departure
+                                  </button>
+                                )}
+                                {record.visaApplication?.id && (
+                                  <button
+                                    onClick={() => handleDownloadVisa(record.visaApplication.id, record.visaApplication.referenceNumber)}
+                                    style={{
+                                      padding: '8px 16px',
+                                      cursor: 'pointer',
+                                      fontSize: '13px',
+                                      backgroundColor: '#10b981',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '6px',
+                                      fontWeight: '600'
+                                    }}
+                                    title="Download Visa Document"
+                                  >
+                                    📄 Download
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
-              <div style={{ marginTop: '20px', color: '#666', fontSize: '14px' }}>
-                <strong>Statistics:</strong> {
-                  arrivalRecords.filter(record => {
-                    if (!recordsSearchTerm.trim()) return true;
-                    const searchLower = recordsSearchTerm.toLowerCase();
-                    return (
-                      record.visaApplication?.referenceNumber?.toLowerCase().includes(searchLower) ||
-                      record.visaApplication?.firstName?.toLowerCase().includes(searchLower) ||
-                      record.visaApplication?.lastName?.toLowerCase().includes(searchLower) ||
-                      record.visaApplication?.passportNumber?.toLowerCase().includes(searchLower)
-                    );
-                  }).length
-                } records found{recordsSearchTerm && ` (filtered from ${arrivalRecords.length} total)`}
-              </div>
+                  <div style={{ marginTop: '20px', color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    📊 {filteredRecords.length} record{filteredRecords.length !== 1 ? 's' : ''} found
+                    {recordsSearchTerm && ` (filtered from ${arrivalRecords.length} total)`}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 };

@@ -109,11 +109,6 @@ const Login = () => {
             <Link to="/">Back to Home</Link>
           </p>
         </div>
-
-        <div className="demo-credentials">
-          <p><strong>Demo Credentials:</strong></p>
-          <p>Super Admin: <code>admin@visaonarrival.rw</code> / <code>Admin@123</code></p>
-        </div>
       </div>
     </div>
   );

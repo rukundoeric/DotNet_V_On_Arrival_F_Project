@@ -156,6 +156,22 @@ public static class PermissionSeeder
                 Description = "Delete countries",
                 Category = "countries",
                 IsActive = true
+            },
+
+            // Reports Permissions
+            new Permission
+            {
+                Name = "reports.view",
+                Description = "View reports and analytics",
+                Category = "reports",
+                IsActive = true
+            },
+            new Permission
+            {
+                Name = "reports.export",
+                Description = "Export reports data",
+                Category = "reports",
+                IsActive = true
             }
         };
 
