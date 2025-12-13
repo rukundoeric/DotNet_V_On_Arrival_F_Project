@@ -74,7 +74,7 @@ try
     builder.Services.AddAuthorization();
 
     builder.Services.AddControllers();
-    builder.Services.AddOpenApi();
+    // builder.Services.AddOpenApi();
 
     // Configure CORS
     builder.Services.AddCors(options =>
@@ -110,10 +110,7 @@ try
     app.UseSerilogRequestLogging();
 
     // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
-    {
-        app.MapOpenApi();
-    }
+   
 
     app.UseHttpsRedirection();
     app.UseCors("AllowFrontend");
