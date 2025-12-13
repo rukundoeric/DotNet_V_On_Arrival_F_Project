@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import './Dashboard.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://visaonarrival-c6fec5dtfwb2hwcc.southafricanorth-01.azurewebsites.net/api';
 
@@ -49,19 +50,19 @@ const VerifyVisa = () => {
     if (!visaData || !visaData.found) return '#6b7280';
 
     if (visaData.isValid && visaData.validityStatus === 'Valid') {
-      return '#10b981'; // Green
+      return '#10b981';
     } else if (visaData.validityStatus === 'Not Yet Active') {
-      return '#f59e0b'; // Orange
+      return '#f59e0b';
     } else if (visaData.validityStatus === 'Expired') {
-      return '#ef4444'; // Red
+      return '#ef4444';
     } else if (visaData.validityStatus === 'Departed - No Longer Valid') {
-      return '#9ca3af'; // Gray
+      return '#9ca3af';
     } else if (visaData.validityStatus === 'Pending Approval') {
-      return '#fbbf24'; // Yellow
+      return '#fbbf24';
     } else if (visaData.validityStatus === 'Rejected') {
-      return '#dc2626'; // Dark Red
+      return '#dc2626';
     }
-    return '#6b7280'; // Gray
+    return '#6b7280';
   };
 
   const getStatusIcon = () => {
@@ -84,194 +85,270 @@ const VerifyVisa = () => {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #00A1DE 0%, #20603D 100%)',
-      padding: '20px'
-    }}>
-      <div className="container" style={{ maxWidth: '800px', margin: '0 auto', marginTop: '50px' }}>
-        <div className="form-card">
-          <div className="form-header" style={{ textAlign: 'center' }}>
-            <h2>Rwanda Visa Verification</h2>
-            <p>Verify the authenticity and validity of a Rwanda visa</p>
+    <div className="dashboard-container">
+      {/* Top Navigation */}
+      <nav className="dashboard-nav">
+        <div className="dashboard-nav-content">
+          <div className="dashboard-logo">
+            <h1>Rwanda Visa Portal</h1>
+            <span>Visa Verification</span>
           </div>
-
-          <div className="form-body">
-            {/* Search Section */}
-            {!refNumber && (
-              <div style={{ marginBottom: '30px' }}>
-                <label className="form-label">Enter Reference Number</label>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="e.g., RW24347123"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
-                    onKeyPress={(e) => e.key === 'Enter' && handleVerify()}
-                    style={{ flex: 1, textTransform: 'uppercase' }}
-                  />
-                  <button
-                    onClick={() => handleVerify()}
-                    className="btn-rwanda"
-                    disabled={loading}
-                  >
-                    {loading ? 'Verifying...' : 'Verify'}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Error Message */}
-            {error && (
-              <div className="error-alert" style={{ marginBottom: '20px' }}>
-                {error}
-              </div>
-            )}
-
-            {/* Verification Result */}
-            {searched && visaData && visaData.found && (
-              <div>
-                {/* Status Banner */}
-                <div style={{
-                  backgroundColor: getStatusColor(),
-                  color: 'white',
-                  padding: '30px',
-                  borderRadius: '10px',
-                  textAlign: 'center',
-                  marginBottom: '30px',
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                }}>
-                  <div style={{ fontSize: '48px', marginBottom: '10px' }}>
-                    {getStatusIcon()}
-                  </div>
-                  <h2 style={{ margin: '10px 0', fontSize: '28px' }}>
-                    {visaData.validityStatus}
-                  </h2>
-                  <p style={{ fontSize: '16px', opacity: 0.9 }}>
-                    Reference Number: {visaData.referenceNumber}
-                  </p>
-                </div>
-
-                {/* Visa Details */}
-                <div className="info-card" style={{ marginBottom: '20px' }}>
-                  <h4 style={{ color: '#1a56db', marginBottom: '15px', borderBottom: '2px solid #e5e7eb', paddingBottom: '10px' }}>
-                    Visa Holder Information
-                  </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                    <div>
-                      <strong style={{ color: '#6b7280', fontSize: '14px' }}>Full Name</strong>
-                      <p style={{ margin: '5px 0', fontSize: '16px' }}>
-                        {visaData.firstName} {visaData.lastName}
-                      </p>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#6b7280', fontSize: '14px' }}>Nationality</strong>
-                      <p style={{ margin: '5px 0', fontSize: '16px' }}>{visaData.nationality}</p>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#6b7280', fontSize: '14px' }}>Passport Number</strong>
-                      <p style={{ margin: '5px 0', fontSize: '16px' }}>{visaData.passportNumber}</p>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#6b7280', fontSize: '14px' }}>Application Status</strong>
-                      <p style={{ margin: '5px 0', fontSize: '16px' }}>{visaData.applicationStatus}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Validity Period */}
-                <div className="info-card" style={{ marginBottom: '20px' }}>
-                  <h4 style={{ color: '#1a56db', marginBottom: '15px', borderBottom: '2px solid #e5e7eb', paddingBottom: '10px' }}>
-                    Validity Period
-                  </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                    <div>
-                      <strong style={{ color: '#6b7280', fontSize: '14px' }}>Valid From</strong>
-                      <p style={{ margin: '5px 0', fontSize: '16px' }}>
-                        {new Date(visaData.arrivalDate).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#6b7280', fontSize: '14px' }}>Valid Until</strong>
-                      <p style={{ margin: '5px 0', fontSize: '16px' }}>
-                        {new Date(visaData.expectedDepartureDate).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#6b7280', fontSize: '14px' }}>Purpose of Visit</strong>
-                      <p style={{ margin: '5px 0', fontSize: '16px' }}>{visaData.purposeOfVisit}</p>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#6b7280', fontSize: '14px' }}>Travel Status</strong>
-                      <p style={{ margin: '5px 0', fontSize: '16px' }}>
-                        {visaData.hasDeparted ? 'Departed' : visaData.hasArrived ? 'In Rwanda' : 'Not Yet Arrived'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Additional Information */}
-                <div style={{
-                  backgroundColor: '#f3f4f6',
-                  padding: '15px',
-                  borderRadius: '8px',
-                  borderLeft: '4px solid #1a56db'
-                }}>
-                  <p style={{ margin: '0', fontSize: '14px', color: '#4b5563' }}>
-                    <strong>Note:</strong> This is an official verification from the Republic of Rwanda Immigration Services.
-                    Always verify the visa document against the information provided in this verification.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Not Found Message */}
-            {searched && !loading && !visaData?.found && !error && (
-              <div style={{
-                textAlign: 'center',
-                padding: '40px',
-                color: '#6b7280'
-              }}>
-                <div style={{ fontSize: '64px', marginBottom: '20px' }}>🔍</div>
-                <h3>No Results Found</h3>
-                <p>Please check the reference number and try again</p>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div style={{ marginTop: '30px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setVisaData(null);
-                  setError('');
-                  setSearched(false);
-                  navigate('/verify');
-                }}
-                className="btn-rwanda"
-              >
-                Verify Another
-              </button>
-              <button
-                onClick={() => navigate('/')}
-                className="btn-rwanda"
-                style={{ backgroundColor: '#6b7280' }}
-              >
-                Go to Home
-              </button>
-            </div>
+          <div className="dashboard-user-info">
+            <button onClick={() => navigate('/')} className="logout-btn">
+              ← Back to Home
+            </button>
           </div>
         </div>
-      </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="dashboard-main">
+        <div className="dashboard-header">
+          <h2>Verify Rwanda Visa</h2>
+          <p>Check the authenticity and validity of a Rwanda visa on arrival</p>
+        </div>
+
+        {/* Search Section */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '30px',
+          boxShadow: '0 2px 10px rgba(0, 72, 146, 0.08)',
+          border: '1px solid #CFE3F7',
+          marginBottom: '30px'
+        }}>
+          <label style={{
+            display: 'block',
+            marginBottom: '10px',
+            color: '#004892',
+            fontWeight: '600',
+            fontSize: '1.1rem'
+          }}>
+            Enter Reference Number
+          </label>
+          <div style={{ display: 'flex', gap: '15px' }}>
+            <input
+              type="text"
+              placeholder="e.g., RW24347123"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
+              onKeyPress={(e) => e.key === 'Enter' && handleVerify()}
+              style={{
+                flex: 1,
+                textTransform: 'uppercase',
+                padding: '14px 18px',
+                fontSize: '1.1rem',
+                border: '2px solid #CFE3F7',
+                borderRadius: '8px',
+                outline: 'none',
+                transition: 'border-color 0.3s'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#004892'}
+              onBlur={(e) => e.target.style.borderColor = '#CFE3F7'}
+            />
+            <button
+              onClick={() => handleVerify()}
+              disabled={loading}
+              style={{
+                padding: '14px 40px',
+                backgroundColor: loading ? '#9ca3af' : '#004892',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                transition: 'background-color 0.3s',
+                whiteSpace: 'nowrap'
+              }}
+              onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = '#003a75')}
+              onMouseLeave={(e) => !loading && (e.target.style.backgroundColor = '#004892')}
+            >
+              {loading ? 'Verifying...' : 'Verify Visa'}
+            </button>
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div style={{
+            background: '#fee2e2',
+            border: '1px solid #ef4444',
+            borderRadius: '8px',
+            padding: '15px 20px',
+            marginBottom: '20px',
+            color: '#991b1b'
+          }}>
+            <strong>Error:</strong> {error}
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div style={{ padding: '60px', textAlign: 'center', color: '#6b7280' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '15px' }}>🔍</div>
+            <p style={{ fontSize: '1.2rem' }}>Verifying visa...</p>
+          </div>
+        )}
+
+        {/* Verification Result */}
+        {searched && visaData && visaData.found && !loading && (
+          <>
+            {/* Status Banner */}
+            <div style={{
+              backgroundColor: getStatusColor(),
+              color: 'white',
+              padding: '40px',
+              borderRadius: '12px',
+              textAlign: 'center',
+              marginBottom: '30px',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.15)'
+            }}>
+              <div style={{ fontSize: '64px', marginBottom: '15px' }}>
+                {getStatusIcon()}
+              </div>
+              <h2 style={{ margin: '10px 0', fontSize: '2rem', fontWeight: '700' }}>
+                {visaData.validityStatus}
+              </h2>
+              <p style={{ fontSize: '1.1rem', opacity: 0.95, marginTop: '10px' }}>
+                Reference: <strong>{visaData.referenceNumber}</strong>
+              </p>
+            </div>
+
+            {/* Visa Holder Information */}
+            <div style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '30px',
+              boxShadow: '0 2px 10px rgba(0, 72, 146, 0.08)',
+              border: '1px solid #CFE3F7',
+              marginBottom: '25px'
+            }}>
+              <h3 style={{
+                color: '#004892',
+                marginBottom: '20px',
+                fontSize: '1.4rem',
+                borderBottom: '2px solid #CFE3F7',
+                paddingBottom: '12px'
+              }}>
+                👤 Visa Holder Information
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+                <div>
+                  <div style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '5px' }}>Full Name</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1f2937' }}>
+                    {visaData.firstName} {visaData.lastName}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '5px' }}>Nationality</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1f2937' }}>{visaData.nationality}</div>
+                </div>
+                <div>
+                  <div style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '5px' }}>Passport Number</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1f2937', fontFamily: 'monospace' }}>
+                    {visaData.passportNumber}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '5px' }}>Application Status</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1f2937' }}>{visaData.applicationStatus}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Validity Period */}
+            <div style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '30px',
+              boxShadow: '0 2px 10px rgba(0, 72, 146, 0.08)',
+              border: '1px solid #CFE3F7',
+              marginBottom: '25px'
+            }}>
+              <h3 style={{
+                color: '#004892',
+                marginBottom: '20px',
+                fontSize: '1.4rem',
+                borderBottom: '2px solid #CFE3F7',
+                paddingBottom: '12px'
+              }}>
+                📅 Validity Period
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+                <div>
+                  <div style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '5px' }}>Valid From</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1f2937' }}>
+                    {new Date(visaData.arrivalDate).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '5px' }}>Valid Until</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1f2937' }}>
+                    {new Date(visaData.expectedDepartureDate).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '5px' }}>Purpose of Visit</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1f2937' }}>{visaData.purposeOfVisit}</div>
+                </div>
+                <div>
+                  <div style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '5px' }}>Travel Status</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1f2937' }}>
+                    {visaData.hasDeparted ? '✈️ Departed' : visaData.hasArrived ? '🇷🇼 In Rwanda' : '⏳ Not Yet Arrived'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Official Notice */}
+            <div style={{
+              background: '#f0f9ff',
+              border: '2px solid #004892',
+              borderRadius: '8px',
+              padding: '20px',
+              display: 'flex',
+              gap: '15px',
+              alignItems: 'start'
+            }}>
+              <div style={{ fontSize: '2rem' }}>ℹ️</div>
+              <div>
+                <p style={{ margin: '0', color: '#1e40af', lineHeight: '1.6' }}>
+                  <strong>Official Verification:</strong> This information has been verified against the Republic of Rwanda Immigration Services database.
+                  Always cross-check the visa document details with the information displayed here.
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Not Found Message */}
+        {searched && !loading && !visaData?.found && !error && (
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '60px 40px',
+            textAlign: 'center',
+            boxShadow: '0 2px 10px rgba(0, 72, 146, 0.08)',
+            border: '1px solid #CFE3F7'
+          }}>
+            <div style={{ fontSize: '80px', marginBottom: '20px' }}>🔍</div>
+            <h3 style={{ color: '#004892', fontSize: '1.8rem', marginBottom: '10px' }}>No Results Found</h3>
+            <p style={{ color: '#6b7280', fontSize: '1.1rem' }}>
+              No visa application found with reference number: <strong>{searchTerm}</strong>
+            </p>
+            <p style={{ color: '#6b7280', marginTop: '10px' }}>Please check the reference number and try again</p>
+          </div>
+        )}
+      </main>
     </div>
   );
 };
