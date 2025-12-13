@@ -1,1 +1,1 @@
-dotnet publish --configuration Release --output ./publish
+dotnet publish --configuration Release --output ../publish
