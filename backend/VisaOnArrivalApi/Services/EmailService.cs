@@ -21,30 +21,26 @@ public class EmailService : IEmailService
 
         if (emailProvider.ToUpper() == "GMAIL")
         {
-            // Gmail configuration - use hardcoded credentials
+            // Gmail configuration - from environment variables
             return (
-                smtpHost: "smtp.gmail.com",
-                smtpPort: 587,
-                smtpUsername: "irembotestug651@gmail.com",
-                smtpPassword: "loiv ewem fhsy avna",
-                fromEmail: "irembotestug651@gmail.com",
-                fromName: "Rwanda Immigration Services"
+                smtpHost: Environment.GetEnvironmentVariable("GMAIL_SMTP_HOST") ?? "smtp.gmail.com",
+                smtpPort: int.Parse(Environment.GetEnvironmentVariable("GMAIL_SMTP_PORT") ?? "587"),
+                smtpUsername: Environment.GetEnvironmentVariable("GMAIL_USERNAME") ?? "",
+                smtpPassword: Environment.GetEnvironmentVariable("GMAIL_PASSWORD") ?? "",
+                fromEmail: Environment.GetEnvironmentVariable("GMAIL_FROM_EMAIL") ?? "",
+                fromName: Environment.GetEnvironmentVariable("GMAIL_FROM_NAME") ?? "Rwanda Immigration Services"
             );
         }
         else
         {
-            // Mailtrap configuration
-            var emailSettings = _configuration.GetSection("EmailSettings");
-            var smtpUsername = Environment.GetEnvironmentVariable("SMTP_USERNAME") ?? emailSettings["SmtpUsername"];
-            var smtpPassword = Environment.GetEnvironmentVariable("SMTP_PASSWORD") ?? emailSettings["SmtpPassword"];
-
+            // Mailtrap configuration - from environment variables
             return (
-                smtpHost: emailSettings["SmtpHost"],
-                smtpPort: int.Parse(emailSettings["SmtpPort"] ?? "587"),
-                smtpUsername: smtpUsername,
-                smtpPassword: smtpPassword,
-                fromEmail: emailSettings["FromEmail"],
-                fromName: emailSettings["FromName"]
+                smtpHost: Environment.GetEnvironmentVariable("MAILTRAP_SMTP_HOST") ?? "sandbox.smtp.mailtrap.io",
+                smtpPort: int.Parse(Environment.GetEnvironmentVariable("MAILTRAP_SMTP_PORT") ?? "2525"),
+                smtpUsername: Environment.GetEnvironmentVariable("MAILTRAP_USERNAME") ?? "",
+                smtpPassword: Environment.GetEnvironmentVariable("MAILTRAP_PASSWORD") ?? "",
+                fromEmail: Environment.GetEnvironmentVariable("MAILTRAP_FROM_EMAIL") ?? "noreply@visaonarrival.rw",
+                fromName: Environment.GetEnvironmentVariable("MAILTRAP_FROM_NAME") ?? "Rwanda Immigration Services"
             );
         }
     }

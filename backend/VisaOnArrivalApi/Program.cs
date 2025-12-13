@@ -26,12 +26,21 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
+
     // Use Serilog for logging
     builder.Host.UseSerilog();
 
     // Add services to the container.
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    {
+        // Read environment variable directly
+        var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("DATABASE_URL environment variable is not set.");
+
+        options.UseSqlServer(connectionString);
+    });
+
 
     // Register Services
     builder.Services.AddScoped<IEmailService, EmailService>();
@@ -84,15 +93,15 @@ try
     using (var scope = app.Services.CreateScope())
     {
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
+    
         // Seed countries first
         await CountrySeeder.SeedCountriesAsync(context);
         Log.Information("Countries seeded successfully");
-
+    
         // Seed permissions
         await PermissionSeeder.SeedPermissionsAsync(context);
         Log.Information("Permissions seeded successfully");
-
+    
         // Seed super admin with all permissions
         await SuperAdminSeeder.SeedSuperAdminAsync(context);
     }

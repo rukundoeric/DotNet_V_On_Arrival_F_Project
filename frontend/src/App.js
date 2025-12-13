@@ -51,6 +51,17 @@ const Home = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
 
+  // Auto-redirect admins and officers to their dashboards
+  React.useEffect(() => {
+    if (isAuthenticated && user?.role) {
+      if (user.role === 'Admin') {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (user.role === 'Officer') {
+        navigate('/officer/dashboard', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
+
   const handleLogout = () => {
     logout();
     navigate('/');
